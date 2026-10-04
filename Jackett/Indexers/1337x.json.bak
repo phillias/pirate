@@ -1,0 +1,79 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://1337x.to/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "cf_clearance=ry7vEXVPWKKiOzDpqmUMfv8mqmIGusF8h0QHy226FiQ-1776556429-1.2.1.1-8s2F2r0fmydtMbEVeYs_Oa.rI5ZHbSWoU2s1WjyER8RqnzwOzvnk3Oehlc5SGfWx4mGbqPElBIJ4gNa5yE9InADKOnskK0x8_bw6l60aBA2NujC_T_Nujr6l.SwYpX4CSSSCqzPmkqpYdC.PsMZ8I7ix42TXKZTNaIiboApVhsOGJiLn8_fDjbGtR7cqiFwUrdpkqPs1YzT9IhBzv7bx3sIzZV0O.XxplYu0rFbtLFQ8Gyd0.9W1gc4HlqKmPzXw3KtoMCSLBXNC4ISCWWgyuOAsl53kV0XWwgu_dlhH.UUhkG.mdY0qE38dGnKasaR7F.fmIX_olF5z0gA5bLLs6Q; cf_chl_rc_ni=1"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "filterbyuploader",
+    "type": "inputstring",
+    "name": "Filter by Uploader",
+    "value": null
+  },
+  {
+    "id": "downloadlink",
+    "type": "inputselect",
+    "name": "Download link",
+    "value": "http://itorrents.org/",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "downloadlink(fallback)",
+    "type": "inputselect",
+    "name": "Download link (fallback)",
+    "value": "magnet:",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "disablesorting-1337xpreventssortingsearchesduringhighserverload,whichbreakstheindexerwhenperformingakeywordsearch-disableifyougetzeroresults",
+    "type": "inputbool",
+    "name": "Disable sorting - 1337x prevents sorting searches during high server load, which breaks the indexer when performing a keyword search - disable if you get zero results",
+    "value": false
+  },
+  {
+    "id": "sortrequestedfromsite",
+    "type": "inputselect",
+    "name": "Sort requested from site",
+    "value": "time",
+    "options": {
+      "time": "created",
+      "seeders": "seeders",
+      "size": "size"
+    }
+  },
+  {
+    "id": "orderrequestedfromsite",
+    "type": "inputselect",
+    "name": "Order requested from site",
+    "value": "desc",
+    "options": {
+      "desc": "desc",
+      "asc": "asc"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

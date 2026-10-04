@@ -1,0 +1,49 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://www.tokyotosho.info/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "__ddg8_=JDL8UUOBmFZR4zKD; __ddg10_=1773699616; __ddg9_=104.28.166.118; __ddg1_=gavDPOfBzEq47pqvSdfS; lastvisit=1776021340; lastvisit_session=1771524667"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": "Exception (tokyotosho): The response ended prematurely. (ResponseEnded): An error occurred while sending the request."
+  },
+  {
+    "id": "category",
+    "type": "inputselect",
+    "name": "Category",
+    "value": "0",
+    "options": {
+      "0": "All",
+      "1": "Anime",
+      "10": "Non-English",
+      "3": "Manga",
+      "8": "Drama",
+      "2": "Music",
+      "9": "Music Video",
+      "7": "Raws",
+      "4": "Hentai",
+      "12": "Hentai (Anime)",
+      "13": "Hentai (Manga)",
+      "14": "Hentai (Games)",
+      "11": "Batch",
+      "15": "JAV",
+      "5": "Other"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

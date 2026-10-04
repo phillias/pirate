@@ -1,0 +1,47 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://www.sexy-pics.us/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "cf_clearance=GCWJpzD9GOZgvMRJzmfQxvL7_Vc6pGmVFZQpWp_zpHE-1776282650-1.2.1.1-lRWVee2sKYA__hetdSTbthNyAtz9cYVpaJtBVa5AcbkUaxHAzfks88VTZLsBl781tmlhOQmh9lkRO65JJmF9MoVTqeGZQ4P4t05IqYR9yFE8lHGhMWRrPZfzc20viTPydCB_wiy_8EGbGwQ84npjf_E2uDbvCh3ZDs.wXWdMVrw0zBLApwnbHA49rsoaF8AynDI9AEQQakLLEDdbdFGuqOWMQJhVPsTAxIVUh1rmhkLYeTCP2nrpkbs.ic5JkvYchB0dnq5f_sUTvu9bnBraJnK7TynuchwnThaAiDnh4dRpD.HXB9CuelXGV17eDC9_mj0CWTqoPSV2fqVTOjocdQ; cf_chl_rc_ni=1"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": "Exception (sexypics): The response ended prematurely. (ResponseEnded): An error occurred while sending the request."
+  },
+  {
+    "id": "sortrequestedfromsite",
+    "type": "inputselect",
+    "name": "Sort requested from site",
+    "value": "age",
+    "options": {
+      "age": "created",
+      "se": "seeders",
+      "size": "size"
+    }
+  },
+  {
+    "id": "orderrequestedfromsite",
+    "type": "inputselect",
+    "name": "Order requested from site",
+    "value": "desc",
+    "options": {
+      "desc": "desc",
+      "asc": "asc"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

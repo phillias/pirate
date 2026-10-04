@@ -1,0 +1,46 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://www.torrentdownloads.pro/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "PHPSESSID=28h8rustun7jhp8rrthq8iasrr; cf_clearance=20tVeQ10t89aq6yQ32ExhRn9w6wmjde_qrHFc996.g4-1775316244-1.2.1.1-jipWFoA4GCBqf.VgIV624qyvneZvSd_F8FmhIB04NWFS3hVD_q8fMZCK0pVqUsP672ZJ6LqE6cit6i1ss3O428K_YiQOGKqlLfAdNQscjKvyt8vP35oE3WYC5kW_bm_hVk6Pm_b4Amh4ehIidDOJgYgn12VgNlenLdQIR_37AgseKgqnHCd4NgfvrS8MkD_RQO_q4Q2pOVqNp41jFgG4iouiIXVN.LZKiz5YpE.v7GY7jn4edDFIxAKkwZZkiIDCvymOmS7vQKtfn88sJU0QaIKyHTuPreh6nk3b6aCywPecZpiREnHC6cJYIuFEnXf8f3ObC59rAEC9t0TWZN9HIg"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "downloadlink",
+    "type": "inputselect",
+    "name": "Download link",
+    "value": "magnet:",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "downloadlink(fallback)",
+    "type": "inputselect",
+    "name": "Download link (fallback)",
+    "value": "http://itorrents.org/",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

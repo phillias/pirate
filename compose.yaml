@@ -1,0 +1,506 @@
+# Pirate compose stack.
+#
+# Image policy: every image is pinned to an immutable `tag@sha256:...` digest
+# captured during the 2026-10 migration (decision 4). Image upgrades are
+# deliberate PRs, not floating `:latest` pulls.
+#
+# Startup order:
+#   proton / warp (proxy bases) must be healthy before their *byparr variants
+#   (enforced via depends_on: service_healthy); the byparr variants reach their
+#   proxy through PROXY_SERVER over pirate_default (NOT network_mode: service:).
+#   decypharr re-serves the shared/torbox FUSE mount at start, so consumers of
+#   /torbox (grimmory) must start after it.
+#   grimmory depends on the selfhost stack's MariaDB (host.docker.internal:3306)
+#   — a cross-stack dependency that cannot be expressed with depends_on; see
+#   AGENTS.md §7 and §2.
+#
+# Port policy: every published port binds to 127.0.0.1 so services are
+# reachable only from the host (godoxy reverse proxy, host-network mode) and
+# never directly from the LAN. Inter-stack consumers (aios → warp:1080,
+# warpbyparr → warp:1080, protonbyparr → proton:8888) use the internal
+# pirate_default network and are unaffected by the host bind address.
+services:
+  aios:
+    image: ghcr.io/viren070/aiostreams:latest@sha256:439465bb8eeebd40046efd8c96441512e55bb920604ba2431cea14be64bb6798
+    container_name: aios
+    profiles:
+    - all
+    - stremio
+    labels:
+    - proxy.aios.homepage.category=pirate
+    depends_on: {}
+    ports:
+    - 127.0.0.1:3000:3000
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    logging:
+      driver: journald
+    env_file:
+    - AIOS.env
+    volumes:
+    - ./AIOS/data:/app/data
+  decypharr:
+    image: cy01/blackhole:latest@sha256:a65c62a18843ca3dfa73cdee5eecccd3732d98f3ff845ae8338a1caf7060dd1a
+    container_name: decypharr
+    profiles:
+    - all
+    - arrs
+    labels:
+    - proxy.decypharr.homepage.category=pirate
+    ports:
+    - 127.0.0.1:8282:8282
+    logging:
+      driver: journald
+    environment:
+    - UMASK=003
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    volumes:
+    # Bind (not named volume): the live container mounts ./decypharr/data → /app.
+    # The legacy `decypharr-secrets` named volume never existed; its locket-init
+    # one-shot was removed in the same alignment pass.
+    - ./decypharr/data:/app:rw
+    - ./shared/:/shared:rshared
+    restart: unless-stopped
+    devices:
+    - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+    - SYS_ADMIN
+    security_opt:
+    - apparmor:unconfined
+  nzbhydra2:
+    image: lscr.io/linuxserver/nzbhydra2:latest@sha256:6f179b678bb525cfef142da0fd909e59ddfe493999db33031961f10141710af2
+    container_name: nzbhydra2
+    profiles:
+    - all
+    - arrs
+    labels:
+    - proxy.nzbhydra2.homepage.category=pirate
+    - proxy.nzbhydra2.healthcheck.path=/
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 1
+    ports:
+    - 127.0.0.1:5076:5076
+    restart: unless-stopped
+    stop_grace_period: 120s
+    healthcheck:
+      # Docker-level healthcheck is authoritative for godoxy: with this
+      # present, godoxy stops its own HTTP probing of the route.
+      test: ["CMD", "curl", "-fsSL", "-o", "/dev/null", "http://localhost:5076/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    logging:
+      driver: journald
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    volumes:
+    # Bind (not named volume): the live container mounts ./nzbhydra2/config → /config.
+    - ./nzbhydra2/config:/config:rw
+    - ./nzbhydra2/downloads:/downloads
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95
+    container_name: prowlarr
+    profiles:
+    - all
+    - arrs
+    labels:
+    - proxy.prowlarr.homepage.category=pirate
+    logging:
+      driver: journald
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    volumes:
+    # Bind (not named volume): the live container mounts ./prowlarr/config → /config.
+    - ./prowlarr/config:/config:rw
+    ports:
+    - 127.0.0.1:9696:9696
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsSL", "-o", "/dev/null", "http://localhost:9696/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest@sha256:099e895abbeb4564f8c5cb5f2def66462d73dffa39728a1a106af79ff1b04e65
+    container_name: jackett
+    profiles:
+    - all
+    - arrs
+    labels:
+    - proxy.jackett.homepage.category=pirate
+    logging:
+      driver: journald
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 1
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    - AUTO_UPDATE=true
+    - RUN_OPTS=
+    volumes:
+    # Bind (not named volume): the live container mounts ./jackett/config → /config.
+    - ./jackett/config:/config:rw
+    - ./shared/blackhole:/downloads
+    ports:
+    - 127.0.0.1:9117:9117
+    restart: unless-stopped
+    healthcheck:
+      # No -L: Jackett's redirect target returns 400 to non-browser
+      # clients; the 301 itself proves the server is up (curl -f passes 3xx).
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:9117/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  warp:
+    image: caomingjun/warp:slim-latest@sha256:7433d1b14885079c93825f38efde07b7b0419e92f640d2a05e2463a94ff5687d
+    container_name: warp
+    profiles:
+    - all
+    - proxy
+    labels:
+    - proxy.warp.homepage.category=pirate
+    restart: unless-stopped
+    device_cgroup_rules:
+    - c 10:200 rwm
+    ports:
+    - 127.0.0.1:1080:1080
+    environment:
+    - WARP_SLEEP=2
+    - LOG_LEVEL=ERROR
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    cap_add:
+    - MKNOD
+    - AUDIT_WRITE
+    - NET_ADMIN
+    sysctls:
+    - net.ipv6.conf.all.disable_ipv6=0
+    - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+    # WARP registration state (conf.json / reg.json / settings.json /
+    # warp.db) — gitignored host dir; populated at cutover from the live
+    # container (see PR body). Never commit registration secrets.
+    - ./warp:/var/lib/cloudflare-warp:rw
+  proton:
+    container_name: proton
+    image: qmcgaw/gluetun:latest@sha256:2733bb22b27e3efa7a9f2cef9057ec12791b8b225793fcd3dbfd0508404dfc25
+    profiles:
+    - all
+    - proxy
+    cap_add:
+    - NET_ADMIN
+    sysctls:
+    - net.ipv6.conf.all.disable_ipv6=1
+    devices:
+    - /dev/net/tun:/dev/net/tun
+    environment:
+      HTTPPROXY: true
+      HTTPPROXY_STEALTH: true
+      SHADOWSOCKS: true
+      SHADOWSOCKS_PASSWORD: ${SHADOWSOCKS_PASSWORD}
+      VPN_SERVICE_PROVIDER: protonvpn
+      VPN_TYPE: wireguard
+      VPN_PORT_FORWARDING: false
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}
+      WIREGUARD_ADDRESSES: 10.2.0.2/32
+      SERVER_COUNTRIES: United States
+      FREE_ONLY: true
+      GLUETUN_HTTP_CONTROL_SERVER_ENABLE: true
+      HTTP_CONTROL_SERVER_AUTH_DEFAULT_ROLE: ${HTTP_CONTROL_SERVER_AUTH}
+      WIREGUARD_MTU: 1440
+      HEALTH_SERVER_ADDRESS: 0.0.0.0:9999
+    volumes:
+    - ./proton:/gluetun
+    labels:
+    - proxy.proton.port=9999
+    - proxy.proton.healthcheck.path=/gluetun-entrypoint
+    - proxy.proton.homepage.name=Proton
+    - proxy.proton.homepage.category=pirate
+    ports:
+    - 127.0.0.1:8980:8080
+    - 127.0.0.1:8939:8000
+    - 127.0.0.1:8888:8888
+    - 127.0.0.1:8388:8388/tcp
+    - 127.0.0.1:8388:8388/udp
+    - 127.0.0.1:9999:9999
+    restart: always
+    healthcheck:
+      test:
+      - CMD
+      - /gluetun-entrypoint
+      - healthcheck
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest@sha256:874f719518f617d03a60e03411fc5d090647e1a877041e81f8dc965927c7deb6
+    container_name: byparr
+    profiles:
+    - all
+    - proxy
+    labels:
+    - proxy.byparr.homepage.category=pirate
+    restart: unless-stopped
+    environment:
+    - TZ=${TZ}
+    - LOG_LEVEL=INFO
+    - UV_CACHE_DIR=/cache/uv
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+  warpbyparr:
+    image: ghcr.io/thephaseless/byparr:latest@sha256:874f719518f617d03a60e03411fc5d090647e1a877041e81f8dc965927c7deb6
+    container_name: warpbyparr
+    profiles:
+    - all
+    - proxy
+    labels:
+    - proxy.warpbyparr.homepage.category=pirate
+    restart: unless-stopped
+    environment:
+    - TZ=${TZ}
+    - LOG_LEVEL=INFO
+    - PROXY_SERVER=http://warp:1080
+    - UV_CACHE_DIR=/cache/uv
+    depends_on:
+      warp:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+  protonbyparr:
+    image: ghcr.io/thephaseless/byparr:latest@sha256:874f719518f617d03a60e03411fc5d090647e1a877041e81f8dc965927c7deb6
+    container_name: protonbyparr
+    profiles:
+    - all
+    - proxy
+    labels:
+    - proxy.protonbyparr.homepage.category=pirate
+    restart: unless-stopped
+    environment:
+    - TZ=${TZ}
+    - LOG_LEVEL=INFO
+    - PROXY_SERVER=http://proton:8888
+    - UV_CACHE_DIR=/cache/uv
+    depends_on:
+      proton:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+  abr:
+    image: markbeep/audiobookrequest:latest
+    container_name: abr
+    profiles:
+    - books
+    labels:
+    - proxy.abr.homepage.category=pirate
+    ports:
+    - 127.0.0.1:8837:8000
+    logging:
+      driver: journald
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    volumes:
+    - ./ABR/config:/config
+    restart: unless-stopped
+  abs:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: abs
+    profiles:
+    - books
+    labels:
+    - proxy.abs.homepage.category=pirate
+    logging:
+      driver: journald
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    ports:
+    - 127.0.0.1:13377:80
+    volumes:
+    - ./mnt/:/mnt
+    - ./ABS/config:/config
+    - ./ABS/metadata:/metadata
+    restart: unless-stopped
+  grimmory:
+    # Cross-stack dependency: the `grimmory` schema lives in the selfhost stack's
+    # MariaDB (host.docker.internal:3306) — NOT in this compose project, so it
+    # cannot be expressed via depends_on. Startup order: selfhost MariaDB must
+    # be up before this stack starts (AGENTS.md §2); if the DB is unreachable
+    # at boot, grimmory crash-loops until it is reachable.
+    # DB credentials arrive via the bind-mounted secrets.env (rendered from
+    # .env: DATABASE_USERNAME / DATABASE_PASSWORD — see templates/grimmory).
+    image: grimmory/grimmory:v3.5.0@sha256:bf6fe21c6e247597f7869664a440b5a34242e2d2940575cae39c17bfaa66dc0b
+    container_name: grimmory
+    profiles:
+    - all
+    - books
+    extra_hosts:
+    - host.docker.internal:host-gateway
+    entrypoint:
+    - /bin/sh
+    - -c
+    command:
+    - "set -e; [ -f /run/secrets/secrets.env ] && . /run/secrets/secrets.env || { echo 'ERROR: secrets.env not found or unreadable' >&2; exit 1; }; : $${DATABASE_USERNAME:?DATABASE_USERNAME not set} $${DATABASE_PASSWORD:?DATABASE_PASSWORD not set}; exec /usr/local/bin/entrypoint.sh java --enable-native-access=ALL-UNNAMED --enable-preview -jar /app/app.jar"
+    environment:
+    - USER_ID=${PUID:-1000}
+    - GROUP_ID=${PGID:-1000}
+    - TZ=${TZ:-UTC}
+    - DATABASE_URL=jdbc:mariadb://host.docker.internal:3306/grimmory
+    - API_DOCS_ENABLED=false
+    - DISK_TYPE=local
+    labels:
+    - proxy.grimmory.port=6760
+    - proxy.grimmory.homepage.category=pirate
+    ports:
+    - 127.0.0.1:6760:6060
+    volumes:
+    - ./grimmory/secrets.env:/run/secrets/secrets.env:ro
+    - ./grimmory:/app/data
+    - ./shared/books:/books
+    - ./shared/:/shared:rshared
+    - ./shared/bookdrop:/bookdrop
+    - ./shared/torbox:/torbox
+    - /home/ubuntu/docker/flexget/gdrive-phillias:/gdrive-phillias:ro,rslave
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+          pids: 512
+    healthcheck:
+      # DB-aware (Spring Boot 3.5 actuator): /actuator/health aggregates the health contributors,
+      # including `db` (DataSourceHealthIndicator runs a SELECT 1 validation query
+      # via HikariCP). When MariaDB is unreachable the endpoint returns HTTP 503,
+      # wget exits 8, and the container is marked unhealthy — unlike the old
+      # /api/v1/healthcheck, which returned UP without touching the DB.
+      test:
+      - CMD-SHELL
+      - wget -q -O - http://localhost:6060/actuator/health
+      interval: 30s
+      retries: 10
+      start_period: 120s
+      timeout: 10s
+    restart: unless-stopped
+  openbooks:
+    container_name: openbooks
+    image: evanbuss/openbooks:latest
+    profiles:
+    - books
+    labels:
+    - proxy.openbooks.homepage.category=pirate
+    logging:
+      driver: journald
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:18080:80
+    volumes:
+    - ./bookdrop:/books:rshared
+    command: --persist --name OpenBooks
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+  storyteller:
+    image: registry.gitlab.com/storyteller-platform/storyteller:latest
+    container_name: storyteller
+    profiles:
+    - books
+    labels:
+    - proxy.storyteller.homepage.category=pirate
+    depends_on: {}
+    entrypoint:
+    - /bin/sh
+    - -c
+    command:
+    - . /run/secrets/secrets.env && exec entrypoint.sh node --enable-source-maps server.js
+    logging:
+      driver: journald
+    volumes:
+    - ./storyteller/secrets.env:/run/secrets/secrets.env:ro
+    - ./storyteller:/data:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+          pids: 512
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    ports:
+    - 127.0.0.1:8002:8001
+    restart: unless-stopped
+  shelfmark:
+    image: ghcr.io/calibrain/shelfmark:latest
+    container_name: shelfmark
+    profiles:
+    - books
+    labels:
+    - proxy.shelfmark.homepage.category=pirate
+    logging:
+      driver: journald
+    environment:
+    - PUID=${PUID}
+    - PGID=${PGID}
+    - TZ=${TZ}
+    - OPENLIBRARY_ENABLED=true
+    - GOOGLEBOOKS_ENABLED=true
+    - USE_CF_BYPASS=true
+    ports:
+    - 127.0.0.1:8084:8084
+    restart: unless-stopped
+    volumes:
+    - shelfmark-secrets:/config:rw
+    - ./bookdrop:/books:rshared
+    depends_on:
+      shelfmark-init:
+        condition: service_completed_successfully
+  shelfmark-init:
+    image: us-chicago-1.ocir.io/axh7zpa5qpqc/bws-init:latest@sha256:93dc5dfd2e85325a76a35bb0c44f7788aab11f28b3594741bb2449c27bba2fa5
+    container_name: shelfmark-init
+    profiles:
+    - books
+    restart: 'no'
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -c
+    command:
+    - mkdir -p /config/plugins /config/covers && locket inject --provider bws --bws-token
+      file:/run/secrets/bwstoken --mode one-shot --map /templates/shelfmark:/config
+      --map /templates/shelfmark-plugins:/config/plugins --user 1001:998 --file-mode
+      0640 --dir-mode 0755 && base64 -d /config/.flask_secret > /config/.flask_secret.decoded
+      && mv /config/.flask_secret.decoded /config/.flask_secret && chmod 600 /config/.flask_secret
+    volumes:
+    - ./templates/shelfmark:/templates/shelfmark:ro
+    - ./templates/shelfmark-plugins:/templates/shelfmark-plugins:ro
+    - shelfmark-secrets:/config
+    - /home/ubuntu/.config/bwsh/token:/run/secrets/bwstoken:ro
+    networks: []
+volumes:
+  shelfmark-secrets: {}

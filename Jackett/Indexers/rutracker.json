@@ -1,0 +1,86 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://rutracker.org/"
+  },
+  {
+    "id": "username",
+    "type": "inputstring",
+    "name": "Username",
+    "value": "Unhinge8288"
+  },
+  {
+    "id": "password",
+    "type": "inputstring",
+    "name": "Password",
+    "value": "CfDJ8DZWUgzGqiNBkSpXxpZ6RmJx4TuigK_OhH9ueRce8Sq7zGdmWdrULgK45obtjvaB95QTfNXvT_LGB8J9J5KT1Wd1CbgklB86dtn5OPA8k597bfOeMcda5d1j2WHrzaBOfw"
+  },
+  {
+    "id": "captchatext",
+    "type": "inputstring",
+    "name": "Captcha Text",
+    "value": ""
+  },
+  {
+    "id": "captchacookie",
+    "type": "hiddendata",
+    "name": "Captcha Cookie",
+    "value": null
+  },
+  {
+    "id": "searchbyuploader",
+    "type": "inputstring",
+    "name": "Search By Uploader",
+    "value": ""
+  },
+  {
+    "id": "usemagnetlinks",
+    "type": "inputbool",
+    "name": "Use Magnet Links",
+    "value": false
+  },
+  {
+    "id": "striprussianletters",
+    "type": "inputbool",
+    "name": "Strip Russian Letters",
+    "value": true
+  },
+  {
+    "id": "addrustoendofalltitlestoimprovelanguagedetectionbysonarrandradarr.willcauseenglish-onlyresultstobemisidentified.",
+    "type": "inputbool",
+    "name": "Add RUS to end of all titles to improve language detection by Sonarr and Radarr. Will cause English-only results to be misidentified.",
+    "value": false
+  },
+  {
+    "id": "movefirsttagstoendofreleasetitle",
+    "type": "inputbool",
+    "name": "Move first tags to end of release title",
+    "value": false
+  },
+  {
+    "id": "movealltagstoendofreleasetitle",
+    "type": "inputbool",
+    "name": "Move all tags to end of release title",
+    "value": false
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "bb_ssl=1; bb_session=0-54861180-YBF429ZdJixduaNrq4b5"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": "Exception (rutracker): The response ended prematurely. (ResponseEnded): An error occurred while sending the request."
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

@@ -1,0 +1,12 @@
+[[roles]]
+name = "Basic"
+routes = [
+    "GET /v1/openvpn/portforwarded",
+    "GET /v1/portforward",
+    "GET /v1/publicip/ip",
+    "GET /v1/version",
+    "GET /v1/vpn/status"
+]
+auth = "none"
+#auth = "apikey"
+#apikey = "8n3mgGw8TQL8wFXiiD7E2W"

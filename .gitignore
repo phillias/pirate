@@ -1,0 +1,84 @@
+mnt/
+mariadb/
+books/
+bookdrop/
+ABR/config/*.sqlite*
+ABS/config/*.sqlite*
+ABS/metadata/logs/
+ABS/config/migrations/
+AIOS/data/db.sqlite*
+AIOS/data/anime-database/
+AIOS/data/seadex/trs.json
+decypharr/configs/db
+decypharr/configs/cache/
+decypharr/configs/logs/
+nzbhydra2/data/database/nzbhydra.trace.db
+nzbhydra2/data/logs/
+prowlarr/data/Definitions/
+prowlarr/data/logs/
+prowlarr/data/prowlarr.pid
+prowlarr/data/logs.db*
+prowlarr/data/logs.db
+Jackett/*.txt
+Jackett/Indexers/
+Jackett/updater.txt.*.txt
+shelfmark/covers/
+warp/data/cfwarp*
+# WARP registration state (bind-mounted at /var/lib/cloudflare-warp) —
+# contains account secrets; never commit. Populate at cutover from the
+# live container.
+warp/
+shared
+backups/
+
+# Docker env files (API keys, passwords, tokens)
+.env
+.env.local
+AIOS.env
+AIOS.env.local
+# Prod OCI vault-init env — secret, never commit
+.env.prodociprimary
+
+# Live application state (runtime, not source): rendered secrets and
+# runtime config untracked in the 2026-10 migration (phase 1c).
+shelfmark/settings.json
+shelfmark/.flask_secret
+proton/servers.json
+
+# Restic credentials (contains OCI secret keys + restic passphrase)
+.restic-env
+
+# --- Cutover hardening (2026-10-03): runtime state + rendered secrets ---
+# proton: gluetun rendered secrets (interpolated from .env at cutover)
+proton/HTTP_CONTROL_SERVER_AUTH
+proton/SHADOWSOCKS_PASSWORD
+proton/WIREGUARD_PRIVATE_KEY
+# grimmory: rendered secrets + runtime state
+grimmory/secrets.env
+grimmory/test-write
+grimmory/images/
+# jackett: runtime config dir (lowercase; Jackett/ seed data is tracked)
+jackett/config/
+# nzbhydra2: runtime config + downloads bind dirs
+nzbhydra2/config/
+nzbhydra2/downloads/
+# prowlarr: runtime config + hot-backup DB files (main prowlarr.db tracked)
+prowlarr/config/
+prowlarr/data/prowlarr.db*
+# decypharr: runtime data (auth.json credentials, config, cache, db, logs)
+decypharr/data/
+# storyteller: secrets + runtime DB + uploads + autoimport
+storyteller/secrets.env
+storyteller/storyteller.db*
+storyteller/uploads/
+storyteller/.autoimport/
+# shelfmark: runtime user DB (settings.json/.flask_secret/covers already ignored; plugins/ tracked)
+shelfmark/users.db*
+# AIOS: runtime mapping/instance state
+AIOS/data/id-mappings/
+AIOS/data/scene-mappings/
+AIOS/data/instance-id
+# restic backup log (written by restic-backup.sh into repo dir)
+restic-backup.log
+# phase-2 prep secret archives (tarballs of env/DB exports)
+.volume-exports/

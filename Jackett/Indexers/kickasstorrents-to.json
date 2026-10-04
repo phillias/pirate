@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://kickass.torrentbay.st/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "cf_clearance=feLmviwEwDYyO4uJAm6IJAx.7gSkN78KNB_b0SiB3Ww-1776568203-1.2.1.1-lUtj2OpZiDv75a89NOcKh8AUQ4sHLH.8DpRx.flUi_cWDqm4jL1HDVa3WrxBTeSRgrNjyRnTi97tUZ_CGdRthLADsxT44JISBunFT7cTC8KKf6nJfcWaZtaq3FTYsr43wq9lzcdlw3zA5JumSFrhe217YKU48J30cwCzoQK6kWwrYr.mNrSIuepHz3mOTz5qL6NmlL11fWgKxmMV0AudFE2Mmn_mFEssxqcvywcG01w6cRUrGjjTiR5WoIBzD_XTEs9KN5LdE7h26xGc5fVUFhDShm6xJCU165syVKsm8cRBxfwJwfpWKcrCqG.pk.pxueHFIN1ZaduRumihwaeaVg"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": "Exception (kickasstorrents-to): The response ended prematurely. (ResponseEnded): An error occurred while sending the request."
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

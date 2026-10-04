@@ -1,0 +1,31 @@
+{"timestamp":"2026-03-11 00:30:00.840","source":"CronManager.js:44","message":"[CronManager] Open session cleanup cron executing","levelName":"DEBUG","level":1}
+{"timestamp":"2026-03-11 00:30:00.841","source":"Database.js:835","message":"[Database] Error cleaning up expired sessions: SQLITE_READONLY: attempt to write a readonly database","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-11 00:30:00.843","source":"ApiCacheManager.js:20","message":"[ApiCacheManager] Object.afterBulkUpdate: Clearing cache","levelName":"DEBUG","level":1}
+{"timestamp":"2026-03-11 18:56:38.995","source":"Server.js:220","message":"=== Starting Server ===","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:38.996","source":"Server.js:143","message":"[Server] Init v2.32.1","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:38.996","source":"Server.js:144","message":"[Server] Node.js Version: v20.19.6","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:38.997","source":"Server.js:145","message":"[Server] Platform: linux","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:38.998","source":"Server.js:146","message":"[Server] Arch: arm64","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.059","source":"Database.js:217","message":"[Database] Initializing db at \"/config/absdatabase.sqlite\"","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.096","source":"Database.js:292","message":"[Database] Loading extension /usr/local/lib/nusqlite3/libnusqlite3.so","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.097","source":"Database.js:300","message":"[Database] Successfully loaded extension /usr/local/lib/nusqlite3/libnusqlite3.so","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.097","source":"Database.js:269","message":"[Database] Db supports unaccent and unicode foldings","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.098","source":"Database.js:273","message":"[Database] Db connection was successful","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.107","source":"MigrationManager.js:82","message":"[MigrationManager] Database is already up to date.","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.309","source":"Database.js:201","message":"[Database] Db initialized with models: user, session, apiKey, library, libraryFolder, book, podcast, podcastEpisode, libraryItem, mediaProgress, series, bookSeries, author, bookAuthor, collection, collectionBook, playlist, playlistMediaItem, device, playbackSession, feed, feedEpisode, setting, customMetadataProvider, mediaItemShare","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.356","source":"Database.js:832","message":"[Database] Cleaned up 4 expired sessions","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.370","source":"Database.js:207","message":"[Database] running ANALYZE","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.379","source":"Database.js:209","message":"[Database] ANALYZE completed","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.382","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-02-23.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.382","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-02-27.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.383","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-02-28.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.384","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-03-01.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.384","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-03-02.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.384","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-03-03.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.385","source":"LogManager.js:122","message":"[LogManager] Removed daily log: 2026-03-04.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.385","source":"LogManager.js:71","message":"[LogManager] Init current daily log filename: 2026-03-11.txt","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.393","source":"BackupManager.js:290","message":"[BackupManager] 0 Backups Found","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.394","source":"BackupManager.js:77","message":"[BackupManager] Auto Backups are disabled","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.425","source":"Watcher.js:58","message":"[Watcher] Initializing watcher for \"Torbox\".","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.434","source":"Server.js:423","message":"Listening on port :80","levelName":"INFO","level":2}
+{"timestamp":"2026-03-11 18:56:39.490","source":"Watcher.js:89","message":"[Watcher] \"Torbox\" Ready","levelName":"INFO","level":2}

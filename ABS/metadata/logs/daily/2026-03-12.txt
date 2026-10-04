@@ -1,0 +1,39 @@
+{"timestamp":"2026-03-12 09:32:38.789","source":"LocalAuthStrategy.js:88","message":"[LocalAuth] User \"root\" logged in from ip 2604:cbc0:21c8:2500:9127:fd9a:2c6:54bd","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 09:32:39.047","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io kpGZ0fvJLcqErq6JAAAB","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 09:38:24.467","source":"SocketAuthority.js:207","message":"[SocketAuthority] Socket kpGZ0fvJLcqErq6JAAAB disconnected from client \"root\" after 345420ms (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:25:11.343","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io yycszNPiXyuGqv4sAAAD","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:25:11.369","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 11:33:52.055","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket yycszNPiXyuGqv4sAAAD disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:35:37.408","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io eSUq9Max_4XjsxWRAAAF","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:35:37.460","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 11:51:23.327","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket eSUq9Max_4XjsxWRAAAF disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:54:42.348","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io Xt2ZJEZfGLcOQl_OAAAH","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 11:54:42.369","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 15:20:12.211","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket Xt2ZJEZfGLcOQl_OAAAH disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 15:20:13.382","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io nas9x_n1RnnSL06jAAAJ","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 15:20:13.402","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 16:12:56.536","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket nas9x_n1RnnSL06jAAAJ disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 16:12:58.472","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io D2QEuPLlhKEyTDOuAAAL","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 16:12:58.499","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 17:25:54.410","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io JHhT6FHwSGh2VUmSAAAN","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 17:25:54.438","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 17:25:54.691","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket D2QEuPLlhKEyTDOuAAAL disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 18:54:07.400","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket JHhT6FHwSGh2VUmSAAAN disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 18:54:08.425","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io mhqMQekyLDa5hg68AAAP","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 18:54:08.446","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 19:22:45.745","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket mhqMQekyLDa5hg68AAAP disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 19:22:47.414","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io ilcHBi8MnlHAb-l_AAAR","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 19:22:47.435","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 19:57:20.731","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket ilcHBi8MnlHAb-l_AAAR disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 19:57:23.301","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io N258o0SQKRjSplJiAAAT","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 19:57:23.328","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 19:58:32.858","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket N258o0SQKRjSplJiAAAT disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 20:15:08.591","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io UmfKNefxo58ctPj2AAAV","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 20:15:08.619","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 20:15:53.564","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket UmfKNefxo58ctPj2AAAV disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 21:01:32.330","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io 20JpjvWiWMl-N_JEAAAX","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 21:01:32.349","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 21:18:58.244","source":"SocketAuthority.js:176","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io 9UTJmpJOJy92cUFoAAAZ","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 21:18:58.263","source":"SocketAuthority.js:257","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2026-03-12 21:18:58.583","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket 20JpjvWiWMl-N_JEAAAX disconnected (Reason: ping timeout)","levelName":"INFO","level":2}
+{"timestamp":"2026-03-12 21:56:26.617","source":"SocketAuthority.js:200","message":"[SocketAuthority] Unauth socket 9UTJmpJOJy92cUFoAAAZ disconnected (Reason: ping timeout)","levelName":"INFO","level":2}

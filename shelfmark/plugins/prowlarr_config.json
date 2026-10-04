@@ -1,0 +1,24 @@
+{
+  "PROWLARR_ENABLED": true,
+  "PROWLARR_INDEXERS": [
+    "57",
+    "3",
+    "12",
+    "5",
+    "24",
+    "26",
+    "28",
+    "27",
+    "13",
+    "8",
+    "31",
+    "14",
+    "11",
+    "47",
+    "15",
+    "16"
+  ],
+  "PROWLARR_AUTO_EXPAND": false,
+  "PROWLARR_URL": "http://prowlarr:9696",
+  "PROWLARR_API_KEY": "3b67ff14631e4263ab1d29b27c49ca6d"
+}
