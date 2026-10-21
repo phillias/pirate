@@ -34,6 +34,7 @@ backups/
 # Docker env files (API keys, passwords, tokens)
 .env
 .env.local
+.env.prodociprimary
 /AIOS.env
 /AIOS.env.local
 
@@ -43,6 +44,7 @@ shelfmark/settings.json
 shelfmark/.flask_secret
 shelfmark/config/
 shelfmark/.config-stage/
+*.tmp.*
 proton/servers.json
 
 # Restic credentials (contains OCI secret keys + restic passphrase)

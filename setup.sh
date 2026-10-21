@@ -15,6 +15,9 @@ load_dotenv() {
     case "$line" in
       ''|'#'*) continue ;;
     esac
+    case "$line" in
+      export\ *) line="${line#export }" ;;
+    esac
     name="${line%%=*}"
     value="${line#*=}"
     if [[ "$value" == \"*\" ]]; then
@@ -23,6 +26,14 @@ load_dotenv() {
       value="${value//\\\"/\"}"
       value="${value//\\\\/\\}"
       value="${value//\\\$/\$}"
+      value="${value//\\n/$'\n'}"
+      value="${value//\\r/$'\r'}"
+      value="${value//\\t/$'\t'}"
+    elif [[ "$value" == \'*\' ]]; then
+      value="${value#\'}"
+      value="${value%\'}"
+    else
+      value="${value%%[[:space:]]#*}"
     fi
     export "$name=$value"
   done < "$1"
@@ -98,17 +109,7 @@ envsubst_dotenv() {
 
 ERRORS=0
 render_shell() {
-  local template="$1" target="$2" mode="$3" names="$4" missing
-  missing="$(missing_vars "$names")"
-  if [ -n "$missing" ]; then
-    if [ -s "$target" ]; then
-      echo "   ⚠️  Keeping $target; missing:$missing"
-    else
-      echo "   ❌ Cannot render $target; missing:$missing"
-      ERRORS=$((ERRORS + 1))
-    fi
-    return
-  fi
+  local template="$1" target="$2" mode="$3" names="$4"
   envsubst_shell "$template" "$target" "$names"
   chmod "$mode" "$target"
   echo "   → $target"
@@ -122,17 +123,7 @@ render_dotenv() {
 }
 
 render_json() {
-  local target="$1" mode="$2" names="$3" filter="$4" missing tmp
-  missing="$(missing_vars "$names")"
-  if [ -n "$missing" ]; then
-    if [ -s "$target" ]; then
-      echo "   ⚠️  Keeping $target; missing:$missing"
-    else
-      echo "   ❌ Cannot render $target; missing:$missing"
-      ERRORS=$((ERRORS + 1))
-    fi
-    return
-  fi
+  local target="$1" mode="$2" names="$3" filter="$4" tmp
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
   jq "$filter" "$target.template" > "$tmp"
   mv "$tmp" "$target"
@@ -141,17 +132,7 @@ render_json() {
 }
 
 render_flask_secret() {
-  local target="$1" missing tmp
-  missing="$(missing_vars SHELFMARK_FLASK_SECRET)"
-  if [ -n "$missing" ]; then
-    if [ -s "$target" ]; then
-      echo "   ⚠️  Keeping $target; missing:$missing"
-    else
-      echo "   ❌ Cannot render $target; missing:$missing"
-      ERRORS=$((ERRORS + 1))
-    fi
-    return
-  fi
+  local target="$1" tmp
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
   printf '%s' "$SHELFMARK_FLASK_SECRET" | base64 --decode > "$tmp"
   mv "$tmp" "$target"
@@ -160,17 +141,7 @@ render_flask_secret() {
 }
 
 render_nzbhydra() {
-  local target="$1" missing tmp escaped_password escaped_api_key escaped_torbox escaped_nzbking escaped_nzbnoob escaped_scene
-  missing="$(missing_vars 'NZBHYDRA2_PASSWORD NZBHYDRA2_API_KEY TORBOX_API_KEY NZBKING_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY')"
-  if [ -n "$missing" ]; then
-    if [ -s "$target" ]; then
-      echo "   ⚠️  Keeping $target; missing:$missing"
-    else
-      echo "   ❌ Cannot render $target; missing:$missing"
-      ERRORS=$((ERRORS + 1))
-    fi
-    return
-  fi
+  local target="$1" tmp escaped_password escaped_api_key escaped_torbox escaped_nzbking escaped_nzbnoob escaped_scene escaped_miatrix
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
   escaped_password="$(printf '%s' "$NZBHYDRA2_PASSWORD" | jq -R .)"
   escaped_api_key="$(printf '%s' "$NZBHYDRA2_API_KEY" | jq -R .)"
@@ -178,13 +149,17 @@ render_nzbhydra() {
   escaped_nzbking="$(printf '%s' "$NZBKING_API_KEY" | jq -R .)"
   escaped_nzbnoob="$(printf '%s' "$NZBNOOB_API_KEY" | jq -R .)"
   escaped_scene="$(printf '%s' "$SCENENZBS_API_KEY" | jq -R .)"
-  NZBHYDRA2_PASSWORD="$escaped_password" NZBHYDRA2_API_KEY="$escaped_api_key" TORBOX_API_KEY="$escaped_torbox" NZBKING_API_KEY="$escaped_nzbking" NZBNOOB_API_KEY="$escaped_nzbnoob" SCENENZBS_API_KEY="$escaped_scene" envsubst '${NZBHYDRA2_PASSWORD} ${NZBHYDRA2_API_KEY} ${TORBOX_API_KEY} ${NZBKING_API_KEY} ${NZBNOOB_API_KEY} ${SCENENZBS_API_KEY}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
+  escaped_miatrix="$(printf '%s' "$MIATRIX_API_KEY" | jq -R .)"
+  NZBHYDRA2_PASSWORD="$escaped_password" NZBHYDRA2_API_KEY="$escaped_api_key" TORBOX_API_KEY="$escaped_torbox" NZBKING_API_KEY="$escaped_nzbking" NZBNOOB_API_KEY="$escaped_nzbnoob" SCENENZBS_API_KEY="$escaped_scene" MIATRIX_API_KEY="$escaped_miatrix" envsubst '${NZBHYDRA2_PASSWORD} ${NZBHYDRA2_API_KEY} ${TORBOX_API_KEY} ${NZBKING_API_KEY} ${NZBNOOB_API_KEY} ${SCENENZBS_API_KEY} ${MIATRIX_API_KEY}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
   mv "$tmp" "$target"
   chmod 640 "$target"
   echo "   → $target"
 }
 
 bws_overlay
+
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-pirate}"
+export COMPOSE_PROJECT_NAME
 
 if command -v docker >/dev/null 2>&1; then
   SHELFMARK_VOLUME="${COMPOSE_PROJECT_NAME:-pirate}_shelfmark-secrets"
@@ -193,7 +168,7 @@ else
   SHELFMARK_VOLUME=""
 fi
 
-REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_BUILTIN_USERNAME SHELFMARK_BUILTIN_PASSWORD_HASH QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBKING_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY NZBHYDRA2_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
+REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_BUILTIN_USERNAME SHELFMARK_BUILTIN_PASSWORD_HASH QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBKING_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY MIATRIX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY NZBHYDRA2_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
 MISSING_VARS="$(missing_vars "$REQUIRED_VARS")"
 retained_config_ready() {
   [ -s .env ] && [ -s decypharr/data/config.json ] && [ -s prowlarr/config/config.xml ] && [ -s jackett/config/Jackett/ServerConfig.json ] && [ -s nzbhydra2/config/nzbhydra.yml ] && [ -s warp/conf.json ] && [ -s grimmory/secrets.env ] && [ -s storyteller/secrets.env ] && [ -s AIOS.env ] && [ -s .restic-env ] && docker run --rm -v "$SHELFMARK_VOLUME:/config:ro" alpine:latest sh -c 'test -s /config/.flask_secret && test -s /config/plugins/security.json && test -s /config/plugins/prowlarr_clients.json' >/dev/null
@@ -214,7 +189,7 @@ if [ -z "$SHELFMARK_VOLUME" ]; then
 fi
 
 if [ -f .env.template ]; then
-  render_dotenv .env.template .env 600 "PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH"
+  render_dotenv .env.template .env 600 "COMPOSE_PROJECT_NAME PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH"
 fi
 
 mkdir -p "$SHELF_STAGE/plugins" decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp

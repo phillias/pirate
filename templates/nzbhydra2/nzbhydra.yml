@@ -1108,7 +1108,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: ${TORBOX_API_KEY}
+  apiKey: ${MIATRIX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
