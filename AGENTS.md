@@ -6,8 +6,8 @@ the stack-management essentials and the byparr / Cloudflare-bypass
 research, so any agent working here starts with the full picture.
 
 The full ops runbook lives in the `pirate` skill
-(`~/.agents/skills/pirate/SKILL.md`). Cross-stack patterns (locket-init
-secrets, Godoxy, socket-proxy, restic): the `docker` skill. Prowlarr
+(`~/.agents/skills/pirate/SKILL.md`). Cross-stack patterns (BWS secret
+overlay, Godoxy, socket-proxy, restic): the `docker` skill. Prowlarr
 SQLite corruption: the `prowlarr-db-recovery` skill. This file is only
 the summary; those skills are authoritative.
 
@@ -28,14 +28,15 @@ the summary; those skills are authoritative.
 ## 2. Stack management essentials
 
 - Compose profiles: `all`, `stremio`, `arrs`, `proxy`, `books`.
-- Secrets: proton takes its gluetun secrets as plain env vars from `.env`
-  (gitignored — see `.env.example` for key names); warp's registration
-  state lives in the gitignored `./warp` bind mount. The parked shelfmark
-  keeps its `shelfmark-init`. The arr services
-  (decypharr/prowlarr/jackett/nzbhydra2) mount their rendered configs as
-  bind mounts. aios is the deliberate exception (OCI vault-init — never
-  migrate it).
-- Startup order: selfhost MariaDB before grimmory (cross-stack, see §7);
+- Secrets: all stack secrets live in the phillias BWS project (keyed
+  `PIRATE_<ENVVAR>`, bare prefix — no per-server suffix). `setup.sh`
+  fetches them at render time, overlays onto any `.env` values (vault
+  wins), then renders all config files via `envsubst` from
+  `templates/`. The old locket/bws-init path (`shelfmark-init`) is
+  removed. Warp registration state lives in the gitignored `./warp`
+  bind mount.
+- Startup order: run `./setup.sh` first (renders all configs from BWS);
+  then selfhost MariaDB before grimmory (cross-stack, see §7);
   `proton`/`warp` before their chain variants.
 - Backups: `db-backup.sh` (SQLite hot copy), `restic-backup.sh` (03:00
   cron; app dirs + volume exports; retention 7d/4w/12m), and
@@ -45,7 +46,8 @@ the summary; those skills are authoritative.
   in `compose.yaml` instead of `.env`, HikariCP tuning via env on
   grimmory, the non-DB `/api/v1/healthcheck` as a grimmory healthcheck
   (use `/actuator/health` — it aggregates the `db` indicator and returns
-  503 when MariaDB is down).
+  503 when MariaDB is down), committing secret values to the repo
+  (secrets belong in BWS phillias project with PIRATE_ prefix).
 
 ## 3. Byparr research log
 

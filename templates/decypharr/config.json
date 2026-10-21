@@ -8,9 +8,9 @@
     {
       "provider": "torbox",
       "name": "torbox",
-      "api_key": "{{ 38bae474-b361-43a1-a972-b45f000d8186 }}",
+      "api_key": "${TORBOX_API_KEY}",
       "download_api_keys": [
-        "{{ 38bae474-b361-43a1-a972-b45f000d8186 }}"
+        "${TORBOX_API_KEY}"
       ],
       "download_uncached": true,
       "rate_limit": "250/minute",
@@ -25,7 +25,7 @@
     {
       "name": "Jackett",
       "host": "http://jackett:9117",
-      "token": "{{ b38f0a27-b2f6-4d16-b382-b45f000d890c }}",
+      "token": "${JACKETT_API_KEY}",
       "cleanup": true,
       "download_uncached": false,
       "selected_debrid": "torbox"
@@ -33,7 +33,7 @@
     {
       "name": "Nzbhydra2",
       "host": "http://nzbhydra2:5076",
-      "token": "{{ 4c3b2517-5899-4e7c-93bd-b45f000d8b95 }}",
+      "token": "${NZBHYDRA2_API_KEY}",
       "cleanup": true,
       "download_uncached": false,
       "selected_debrid": "torbox"
@@ -41,7 +41,7 @@
     {
       "name": "Prowlarr",
       "host": "http://prowlarr:9696",
-      "token": "{{ 1c24c28a-bdc4-4a0e-8728-b45f000d868b }}",
+      "token": "${PROWLARR_API_KEY}",
       "cleanup": true,
       "download_uncached": false,
       "selected_debrid": "torbox"

@@ -17,7 +17,7 @@ auth:
     maySeeStats: true
     showIndexerSelection: true
     username: "{OBF}VmnHZKHOmv66l/bHaAfltQ=="
-    password: "{{ 308c14d2-e9e9-4326-8d79-b45f00c995e4 }}"
+     password: "${NZBHYDRA2_PASSWORD}"
 categoriesConfig:
   enableCategorySizes: true
   categories:

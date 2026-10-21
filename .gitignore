@@ -26,23 +26,22 @@ shelfmark/covers/
 warp/data/cfwarp*
 # WARP registration state (bind-mounted at /var/lib/cloudflare-warp) —
 # contains account secrets; never commit. Populate at cutover from the
-# live container.
-warp/
+# live container. The template lives at templates/warp/conf.json.
+/warp/
 shared
 backups/
 
 # Docker env files (API keys, passwords, tokens)
 .env
 .env.local
-AIOS.env
-AIOS.env.local
-# Prod OCI vault-init env — secret, never commit
-.env.prodociprimary
+/AIOS.env
+/AIOS.env.local
 
 # Live application state (runtime, not source): rendered secrets and
 # runtime config untracked in the 2026-10 migration (phase 1c).
 shelfmark/settings.json
 shelfmark/.flask_secret
+shelfmark/config/
 proton/servers.json
 
 # Restic credentials (contains OCI secret keys + restic passphrase)
