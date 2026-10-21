@@ -3,14 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
-
 BWS_PROJECT_ID="fe9eea09-9eaf-45e6-a72f-b45e0150b29d"
 BWS_TOKEN_FILE="${BWS_TOKEN_FILE:-$HOME/.agents/keys/default/.bws-token}"
 BWS_SECRET_PREFIX="PIRATE_"
 
 if [ -f .env ]; then
   set -a
-  # shellcheck disable=SC1091
   source .env
   set +a
   echo "📦 Sourced: .env"
@@ -19,22 +17,11 @@ else
 fi
 
 bws_overlay() {
-  local fetched=0
-  if ! command -v bws >/dev/null 2>&1; then
-    echo "   ⚠️  bws CLI not found"
-  elif ! command -v jq >/dev/null 2>&1; then
-    echo "   ⚠️  jq not found"
-  elif [ ! -r "$BWS_TOKEN_FILE" ]; then
-    echo "   ⚠️  BWS token not readable: $BWS_TOKEN_FILE"
-  else
-    local pairs
-    if pairs="$(bws -t "$(cat "$BWS_TOKEN_FILE")" secret list "$BWS_PROJECT_ID" -o json 2>/dev/null \
-        | jq -r --arg pfx "$BWS_SECRET_PREFIX" \
-            '.[] | select(.key | startswith($pfx)) | .key, .value'
-        )"; then
-      local k v
+  local fetched=0 pairs k v name
+  if command -v bws >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && [ -r "$BWS_TOKEN_FILE" ]; then
+    if pairs="$(bws -t "$(cat "$BWS_TOKEN_FILE")" secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r --arg pfx "$BWS_SECRET_PREFIX" '.[] | select(.key | startswith($pfx)) | .key, .value')"; then
       while IFS= read -r k && IFS= read -r v; do
-        local name="${k#"$BWS_SECRET_PREFIX"}"
+        name="${k#"$BWS_SECRET_PREFIX"}"
         export "$name=$v"
         fetched=$((fetched + 1))
       done <<< "$pairs"
@@ -43,112 +30,164 @@ bws_overlay() {
     else
       echo "   ⚠️  BWS fetch failed (token revoked? network?)"
     fi
+  else
+    echo "   ⚠️  BWS unavailable; using existing plaintext configuration"
   fi
-
-  local sentinel=""
-  for s in SHADOWSOCKS_PASSWORD DATABASE_PASSWORD PROWLARR_API_KEY; do
-    [ -n "${!s:-}" ] && sentinel="$s"
-  done
-  if [ -z "$sentinel" ]; then
+  if [ -z "${SHADOWSOCKS_PASSWORD:-}" ] && [ -z "${DATABASE_PASSWORD:-}" ] && [ -z "${PROWLARR_API_KEY:-}" ]; then
     echo "❌ No BWS secrets and no plaintext secrets. Refusing to render secretless config."
     exit 1
   fi
-  echo "   ⚠️  Continuing on plaintext secrets (sentinel: $sentinel)."
+  echo "   ⚠️  Continuing on plaintext secrets."
 }
+
+missing_vars() {
+  local names="$1" name missing=""
+  for name in $names; do
+    [ -n "${!name:-}" ] || missing="$missing $name"
+  done
+  printf '%s' "${missing# }"
+}
+
+envsubst_shell() {
+  local template="$1" target="$2" names="$3" tmp name escaped
+  tmp="$(mktemp "${target}.tmp.XXXXXX")"
+  (
+    for name in $names; do
+      escaped="$(printf '%s' "${!name}" | sed "s/'/'\\\\''/g")"
+      export "$name=$escaped"
+    done
+    envsubst "$(printf '${%s} ' $names)" < "$template" > "$tmp"
+  )
+  mv "$tmp" "$target"
+}
+
+ERRORS=0
+render_shell() {
+  local template="$1" target="$2" mode="$3" names="$4" missing
+  missing="$(missing_vars "$names")"
+  if [ -n "$missing" ]; then
+    if [ -s "$target" ]; then
+      echo "   ⚠️  Keeping $target; missing:$missing"
+    else
+      echo "   ❌ Cannot render $target; missing:$missing"
+      ERRORS=$((ERRORS + 1))
+    fi
+    return
+  fi
+  envsubst_shell "$template" "$target" "$names"
+  chmod "$mode" "$target"
+  echo "   → $target"
+}
+
+render_json() {
+  local target="$1" mode="$2" names="$3" filter="$4" missing tmp
+  missing="$(missing_vars "$names")"
+  if [ -n "$missing" ]; then
+    if [ -s "$target" ]; then
+      echo "   ⚠️  Keeping $target; missing:$missing"
+    else
+      echo "   ❌ Cannot render $target; missing:$missing"
+      ERRORS=$((ERRORS + 1))
+    fi
+    return
+  fi
+  tmp="$(mktemp "${target}.tmp.XXXXXX")"
+  jq --arg a "${TORBOX_API_KEY:-}" --arg b "${JACKETT_API_KEY:-}" --arg c "${NZBHYDRA2_API_KEY:-}" --arg d "${PROWLARR_API_KEY:-}" --arg e "${SHELFMARK_BUILTIN_USERNAME:-}" --arg f "${SHELFMARK_BUILTIN_PASSWORD_HASH:-}" --arg g "${QBITTORRENT_USERNAME:-}" --arg h "${QBITTORRENT_PASSWORD:-}" --arg i "${JACKETT_ADMIN_PASSWORD:-}" --arg j "${JACKETT_INSTANCE_ID:-}" --arg k "${JACKETT_OMDB_KEY:-}" --arg l "${WARP_OWN_PUBLIC_KEY:-}" --arg m "${WARP_REGISTRATION_ID:-}" --arg n "${WARP_ACCOUNT_ID:-}" --arg o "${WARP_ACCOUNT_LICENSE:-}" "$filter" "$target.template" > "$tmp"
+  mv "$tmp" "$target"
+  chmod "$mode" "$target"
+  echo "   → $target"
+}
+
+render_flask_secret() {
+  local target="$1" missing tmp
+  missing="$(missing_vars SHELFMARK_FLASK_SECRET)"
+  if [ -n "$missing" ]; then
+    if [ -s "$target" ]; then
+      echo "   ⚠️  Keeping $target; missing:$missing"
+    else
+      echo "   ❌ Cannot render $target; missing:$missing"
+      ERRORS=$((ERRORS + 1))
+    fi
+    return
+  fi
+  tmp="$(mktemp "${target}.tmp.XXXXXX")"
+  printf '%s' "$SHELFMARK_FLASK_SECRET" | base64 --decode > "$tmp"
+  mv "$tmp" "$target"
+  chmod 640 "$target"
+  echo "   → $target"
+}
+
+render_nzbhydra() {
+  local target="$1" missing tmp escaped
+  missing="$(missing_vars NZBHYDRA2_PASSWORD)"
+  if [ -n "$missing" ]; then
+    if [ -s "$target" ]; then
+      echo "   ⚠️  Keeping $target; missing:$missing"
+    else
+      echo "   ❌ Cannot render $target; missing:$missing"
+      ERRORS=$((ERRORS + 1))
+    fi
+    return
+  fi
+  tmp="$(mktemp "${target}.tmp.XXXXXX")"
+  escaped="$(printf '%s' "$NZBHYDRA2_PASSWORD" | jq -R .)"
+  NZBHYDRA2_PASSWORD="$escaped" envsubst '${NZBHYDRA2_PASSWORD}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
+  mv "$tmp" "$target"
+  chmod 640 "$target"
+  echo "   → $target"
+}
+
 bws_overlay
 
 if [ -f .env.template ]; then
-  envsubst < .env.template > .env
-  chmod 600 .env
-  echo "   → .env"
+  render_shell .env.template .env 600 "PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH"
 fi
 
-mkdir -p shelfmark/config/plugins
-mkdir -p decypharr/data
-mkdir -p prowlarr/config
-mkdir -p jackett/config/Jackett
-mkdir -p nzbhydra2/config
-mkdir -p grimmory
-mkdir -p storyteller
-mkdir -p warp
+mkdir -p shelfmark/config/plugins decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp
 
-envsubst '${SHELFMARK_FLASK_SECRET}' < templates/shelfmark/.flask_secret > shelfmark/config/.flask_secret
-chmod 600 shelfmark/config/.flask_secret
-echo "   → shelfmark/config/.flask_secret"
+if command -v docker >/dev/null 2>&1 && [ ! -e shelfmark/config/users.db ]; then
+  shelfmark_volume="$(docker volume ls -q -f name=shelfmark-secrets | head -n 1)"
+  [ -z "$shelfmark_volume" ] || docker run --rm -v "$shelfmark_volume:/src:ro" -v "$PWD/shelfmark/config:/dest" alpine:latest sh -c 'cp -a /src/. /dest/'
+fi
 
-envsubst '${SHELFMARK_BUILTIN_USERNAME}${SHELFMARK_BUILTIN_PASSWORD_HASH}' < templates/shelfmark/plugins/security.json > shelfmark/config/plugins/security.json
-chmod 644 shelfmark/config/plugins/security.json
-echo "   → shelfmark/config/plugins/security.json"
+cp templates/decypharr/config.json decypharr/data/config.json.template
+cp templates/shelfmark-plugins/prowlarr_clients.json shelfmark/config/plugins/prowlarr_clients.json.template
+cp templates/shelfmark/plugins/security.json shelfmark/config/plugins/security.json.template
+cp templates/jackett/Jackett/ServerConfig.json jackett/config/Jackett/ServerConfig.json.template
+cp templates/warp/conf.json warp/conf.json.template
 
-envsubst '${QBITTORRENT_USERNAME}${QBITTORRENT_PASSWORD}' < templates/shelfmark-plugins/prowlarr_clients.json > shelfmark/config/plugins/prowlarr_clients.json
-chmod 644 shelfmark/config/plugins/prowlarr_clients.json
-echo "   → shelfmark/config/plugins/prowlarr_clients.json"
+render_flask_secret shelfmark/config/.flask_secret
+render_json shelfmark/config/plugins/security.json 640 "SHELFMARK_BUILTIN_USERNAME SHELFMARK_BUILTIN_PASSWORD_HASH" '. + {BUILTIN_USERNAME: $e, BUILTIN_PASSWORD_HASH: $f}'
+render_json shelfmark/config/plugins/prowlarr_clients.json 640 "QBITTORRENT_USERNAME QBITTORRENT_PASSWORD" '. + {QBITTORRENT_USERNAME: $g, QBITTORRENT_PASSWORD: $h}'
+render_json decypharr/data/config.json 600 "TORBOX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY" '.debrids[0].api_key = $a | .debrids[0].download_api_keys[0] = $a | .arrs[0].token = $b | .arrs[1].token = $c | .arrs[2].token = $d'
+render_shell templates/prowlarr/config.xml prowlarr/config/config.xml 640 "PROWLARR_API_KEY"
+render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = $b | .AdminPassword = $i | .InstanceId = $j | .OmdbApiKey = $k'
+render_nzbhydra nzbhydra2/config/nzbhydra.yml
+render_json warp/conf.json 600 "WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE" '.own_public_key = $l | .registration_id = $m | .account.id = $n | .account.license = $o'
+render_shell templates/grimmory/secrets.env grimmory/secrets.env 600 "DATABASE_USERNAME DATABASE_PASSWORD"
+render_shell templates/storyteller/secrets.env storyteller/secrets.env 600 "STORYTELLER_SECRET_KEY"
+render_shell templates/aios/AIOS.env AIOS.env 600 "AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY PROWLARR_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY TORBOX_API_KEY"
+render_shell templates/restic/restic.env .restic-env 600 "RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
 
-envsubst '${TORBOX_API_KEY}${JACKETT_API_KEY}${NZBHYDRA2_API_KEY}${PROWLARR_API_KEY}' < templates/decypharr/config.json > decypharr/data/config.json
-chmod 600 decypharr/data/config.json
-echo "   → decypharr/data/config.json"
+if [ "$(id -u)" -eq 0 ]; then
+  chown 1001:998 shelfmark/config/.flask_secret shelfmark/config/plugins/security.json shelfmark/config/plugins/prowlarr_clients.json
+fi
 
-envsubst '${PROWLARR_API_KEY}' < templates/prowlarr/config.xml > prowlarr/config/config.xml
-chmod 644 prowlarr/config/config.xml
-echo "   → prowlarr/config/config.xml"
-
-envsubst '${JACKETT_API_KEY}${JACKETT_ADMIN_PASSWORD}${JACKETT_INSTANCE_ID}${JACKETT_OMDB_KEY}' < templates/jackett/Jackett/ServerConfig.json > jackett/config/Jackett/ServerConfig.json
-chmod 644 jackett/config/Jackett/ServerConfig.json
-echo "   → jackett/config/Jackett/ServerConfig.json"
-
-envsubst '${NZBHYDRA2_PASSWORD}' < templates/nzbhydra2/nzbhydra.yml > nzbhydra2/config/nzbhydra.yml
-chmod 644 nzbhydra2/config/nzbhydra.yml
-echo "   → nzbhydra2/config/nzbhydra.yml"
-
-envsubst '${WARP_OWN_PUBLIC_KEY}${WARP_REGISTRATION_ID}${WARP_ACCOUNT_ID}${WARP_ACCOUNT_LICENSE}' < templates/warp/conf.json > warp/conf.json
-chmod 600 warp/conf.json
-echo "   → warp/conf.json"
-
-envsubst '${DATABASE_USERNAME}${DATABASE_PASSWORD}' < templates/grimmory/secrets.env > grimmory/secrets.env
-chmod 600 grimmory/secrets.env
-echo "   → grimmory/secrets.env"
-
-envsubst '${STORYTELLER_SECRET_KEY}' < templates/storyteller/secrets.env > storyteller/secrets.env
-chmod 600 storyteller/secrets.env
-echo "   → storyteller/secrets.env"
-
-envsubst '${AIOS_SECRET_KEY}${AIOS_ADDON_PASSWORD}${AIOS_GDRIVE_CLIENT_SECRET}${AIOS_TMDB_ACCESS_TOKEN}${AIOS_TMDB_API_KEY}${AIOS_TVDB_API_KEY}${PROWLARR_API_KEY}${JACKETT_API_KEY}${NZBHYDRA2_API_KEY}${TORBOX_API_KEY}' < templates/aios/AIOS.env > AIOS.env
-chmod 600 AIOS.env
-echo "   → AIOS.env"
-
-envsubst '${RESTIC_REPOSITORY}${RESTIC_PASSWORD}${AWS_ACCESS_KEY_ID}${AWS_SECRET_ACCESS_KEY}' < templates/restic/restic.env > .restic-env
-chmod 600 .restic-env
-echo "   → .restic-env"
-
-ERRORS=0
 check_file() {
-  if [ ! -f "$1" ]; then
-    echo "   ❌ Missing: $1"
-    ERRORS=$((ERRORS + 1))
-  elif [ ! -s "$1" ]; then
-    echo "   ❌ Empty: $1"
+  if [ ! -f "$1" ] || [ ! -s "$1" ]; then
+    echo "   ❌ Missing or empty: $1"
     ERRORS=$((ERRORS + 1))
   fi
 }
 
-check_file .env
-check_file shelfmark/config/.flask_secret
-check_file shelfmark/config/plugins/security.json
-check_file shelfmark/config/plugins/prowlarr_clients.json
-check_file decypharr/data/config.json
-check_file prowlarr/config/config.xml
-check_file jackett/config/Jackett/ServerConfig.json
-check_file nzbhydra2/config/nzbhydra.yml
-check_file warp/conf.json
-check_file grimmory/secrets.env
-check_file storyteller/secrets.env
-check_file AIOS.env
-check_file .restic-env
+for file in .env shelfmark/config/.flask_secret shelfmark/config/plugins/security.json shelfmark/config/plugins/prowlarr_clients.json decypharr/data/config.json prowlarr/config/config.xml jackett/config/Jackett/ServerConfig.json nzbhydra2/config/nzbhydra.yml warp/conf.json grimmory/secrets.env storyteller/secrets.env AIOS.env .restic-env; do
+  check_file "$file"
+done
 
-echo ""
+rm -f decypharr/data/config.json.template shelfmark/config/plugins/prowlarr_clients.json.template shelfmark/config/plugins/security.json.template jackett/config/Jackett/ServerConfig.json.template warp/conf.json.template
+
 if [ "$ERRORS" -gt 0 ]; then
   echo "❌ Setup failed with $ERRORS error(s)."
   exit 1
 fi
-
 echo "✅ Setup complete. Ready for: docker compose up -d"
