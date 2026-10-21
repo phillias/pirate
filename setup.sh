@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s extglob
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -20,18 +21,15 @@ load_dotenv() {
     esac
     name="${line%%=*}"
     value="${line#*=}"
-    if [[ "$value" == \"*\" ]]; then
-      value="${value#\"}"
-      value="${value%\"}"
+    name="${name##+([[:space:]])}"
+    name="${name%%+([[:space:]])}"
+    [[ "$name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || continue
+    [[ -v "$name" ]] && continue
+    if [[ "$value" =~ ^\"(.*)\"[[:space:]]*(#.*)?$ ]]; then
+      value="${BASH_REMATCH[1]}"
       value="${value//\\\"/\"}"
-      value="${value//\\\\/\\}"
-      value="${value//\\\$/\$}"
-      value="${value//\\n/$'\n'}"
-      value="${value//\\r/$'\r'}"
-      value="${value//\\t/$'\t'}"
-    elif [[ "$value" == \'*\' ]]; then
-      value="${value#\'}"
-      value="${value%\'}"
+    elif [[ "$value" =~ ^\'(.*)\'[[:space:]]*(#.*)?$ ]]; then
+      value="${BASH_REMATCH[1]}"
     else
       value="${value%%[[:space:]]#*}"
     fi
@@ -49,20 +47,19 @@ else
 fi
 
 bws_overlay() {
-  local fetched=0 pairs k v name
+  local fetched=0 k v name
   if command -v bws >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && [ -r "$BWS_TOKEN_FILE" ]; then
-    if pairs="$(BWS_ACCESS_TOKEN="$(cat "$BWS_TOKEN_FILE")" bws secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r --arg pfx "$BWS_SECRET_PREFIX" '.[] | select(.key | startswith($pfx)) | .key, .value')"; then
-      while IFS= read -r k && IFS= read -r v; do
-        [ -n "$k" ] || continue
-        name="${k#"$BWS_SECRET_PREFIX"}"
-        export "$name=$v"
-        fetched=$((fetched + 1))
-      done <<< "$pairs"
-      echo "   → BWS overlay: $fetched secret(s) applied from ${BWS_SECRET_PREFIX}*"
-      [ "$fetched" -gt 0 ] && return 0
-    else
+    if ! while IFS= read -r -d '' k && IFS= read -r -d '' v; do
+      name="${k#"$BWS_SECRET_PREFIX"}"
+      [[ "$k" == "$BWS_SECRET_PREFIX"* && "$name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || continue
+      [[ "$name" == COMPOSE_PROJECT_NAME && -v COMPOSE_PROJECT_NAME ]] && continue
+      export "$name=$v"
+      fetched=$((fetched + 1))
+    done < <(BWS_ACCESS_TOKEN="$(cat "$BWS_TOKEN_FILE")" bws secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -j --arg pfx "$BWS_SECRET_PREFIX" '.[] | select(.key | startswith($pfx)) | .key, "\u0000", .value, "\u0000"'); then
       echo "   ⚠️  BWS fetch failed (token revoked? network?)"
     fi
+    echo "   → BWS overlay: $fetched secret(s) applied from ${BWS_SECRET_PREFIX}*"
+    [ "$fetched" -gt 0 ] && return 0
   else
     echo "   ⚠️  BWS unavailable; using existing plaintext configuration"
   fi
@@ -82,12 +79,11 @@ missing_vars() {
 }
 
 envsubst_shell() {
-  local template="$1" target="$2" names="$3" tmp name escaped
+  local template="$1" target="$2" names="$3" tmp name
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
   (
     for name in $names; do
-      escaped="$(printf '%s' "${!name}" | sed "s/'/'\\\\''/g")"
-      export "$name=$escaped"
+      export "$name=${!name}"
     done
     envsubst "$(printf '${%s} ' $names)" < "$template" > "$tmp"
   )
@@ -95,12 +91,11 @@ envsubst_shell() {
 }
 
 envsubst_dotenv() {
-  local template="$1" target="$2" names="$3" tmp name escaped
+  local template="$1" target="$2" names="$3" tmp name
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
   (
     for name in $names; do
-      escaped="$(printf '%s' "${!name}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\$/\\$/g')"
-      export "$name=$escaped"
+      export "$name=${!name}"
     done
     envsubst "$(printf '${%s} ' $names)" < "$template" > "$tmp"
   )
@@ -143,13 +138,13 @@ render_flask_secret() {
 render_nzbhydra() {
   local target="$1" tmp escaped_password escaped_api_key escaped_torbox escaped_nzbking escaped_nzbnoob escaped_scene escaped_miatrix
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
-  escaped_password="$(printf '%s' "$NZBHYDRA2_PASSWORD" | jq -R .)"
-  escaped_api_key="$(printf '%s' "$NZBHYDRA2_API_KEY" | jq -R .)"
-  escaped_torbox="$(printf '%s' "$TORBOX_API_KEY" | jq -R .)"
-  escaped_nzbking="$(printf '%s' "$NZBKING_API_KEY" | jq -R .)"
-  escaped_nzbnoob="$(printf '%s' "$NZBNOOB_API_KEY" | jq -R .)"
-  escaped_scene="$(printf '%s' "$SCENENZBS_API_KEY" | jq -R .)"
-  escaped_miatrix="$(printf '%s' "$MIATRIX_API_KEY" | jq -R .)"
+  escaped_password="$(printf '%s' "$NZBHYDRA2_PASSWORD" | jq -Rs .)"
+  escaped_api_key="$(printf '%s' "$NZBHYDRA2_API_KEY" | jq -Rs .)"
+  escaped_torbox="$(printf '%s' "$TORBOX_API_KEY" | jq -Rs .)"
+  escaped_nzbking="$(printf '%s' "$NZBKING_API_KEY" | jq -Rs .)"
+  escaped_nzbnoob="$(printf '%s' "$NZBNOOB_API_KEY" | jq -Rs .)"
+  escaped_scene="$(printf '%s' "$SCENENZBS_API_KEY" | jq -Rs .)"
+  escaped_miatrix="$(printf '%s' "$MIATRIX_API_KEY" | jq -Rs .)"
   NZBHYDRA2_PASSWORD="$escaped_password" NZBHYDRA2_API_KEY="$escaped_api_key" TORBOX_API_KEY="$escaped_torbox" NZBKING_API_KEY="$escaped_nzbking" NZBNOOB_API_KEY="$escaped_nzbnoob" SCENENZBS_API_KEY="$escaped_scene" MIATRIX_API_KEY="$escaped_miatrix" envsubst '${NZBHYDRA2_PASSWORD} ${NZBHYDRA2_API_KEY} ${TORBOX_API_KEY} ${NZBKING_API_KEY} ${NZBNOOB_API_KEY} ${SCENENZBS_API_KEY} ${MIATRIX_API_KEY}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
   mv "$tmp" "$target"
   chmod 640 "$target"
@@ -158,7 +153,8 @@ render_nzbhydra() {
 
 bws_overlay
 
-COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-pirate}"
+[[ "${COMPOSE_PROJECT_NAME:-}" == '${COMPOSE_PROJECT_NAME}' ]] && unset COMPOSE_PROJECT_NAME
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-$(basename "$SCRIPT_DIR")}"
 export COMPOSE_PROJECT_NAME
 
 if command -v docker >/dev/null 2>&1; then
