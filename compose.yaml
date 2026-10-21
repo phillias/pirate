@@ -477,30 +477,7 @@ services:
     volumes:
     - shelfmark-secrets:/config:rw
     - ./bookdrop:/books:rshared
-    depends_on:
-      shelfmark-init:
-        condition: service_completed_successfully
-  shelfmark-init:
-    image: us-chicago-1.ocir.io/axh7zpa5qpqc/bws-init:latest@sha256:93dc5dfd2e85325a76a35bb0c44f7788aab11f28b3594741bb2449c27bba2fa5
-    container_name: shelfmark-init
-    profiles:
-    - books
-    restart: 'no'
-    user: 0:0
-    entrypoint:
-    - /bin/sh
-    - -c
-    command:
-    - mkdir -p /config/plugins /config/covers && locket inject --provider bws --bws-token
-      file:/run/secrets/bwstoken --mode one-shot --map /templates/shelfmark:/config
-      --map /templates/shelfmark-plugins:/config/plugins --user 1001:998 --file-mode
-      0640 --dir-mode 0755 && base64 -d /config/.flask_secret > /config/.flask_secret.decoded
-      && mv /config/.flask_secret.decoded /config/.flask_secret && chmod 600 /config/.flask_secret
-    volumes:
-    - ./templates/shelfmark:/templates/shelfmark:ro
-    - ./templates/shelfmark-plugins:/templates/shelfmark-plugins:ro
-    - shelfmark-secrets:/config
-    - /home/ubuntu/.config/bwsh/token:/run/secrets/bwstoken:ro
-    networks: []
+
 volumes:
-  shelfmark-secrets: {}
+  shelfmark-secrets:
+    name: ${COMPOSE_PROJECT_NAME:-pirate}_shelfmark-secrets

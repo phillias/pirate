@@ -4,7 +4,7 @@
   <SslPort>6969</SslPort>
   <EnableSsl>False</EnableSsl>
   <LaunchBrowser>True</LaunchBrowser>
-  <ApiKey>{{ cb6c1d08-e196-45a0-a5ba-b45f00c990dc }}</ApiKey>
+  <ApiKey>${PROWLARR_API_KEY}</ApiKey>
   <AuthenticationMethod>Forms</AuthenticationMethod>
   <AuthenticationRequired>DisabledForLocalAddresses</AuthenticationRequired>
   <Branch>master</Branch>

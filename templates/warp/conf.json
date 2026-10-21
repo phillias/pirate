@@ -1,6 +1,6 @@
 {
-  "own_public_key": "{{ 0a1ab346-7fc3-4c17-b37a-b45f00ca72e3 }}",
-  "registration_id": "{{ beef5ecf-e896-482c-8dfe-b45f00ca7568 }}",
+  "own_public_key": "${WARP_OWN_PUBLIC_KEY}",
+  "registration_id": "${WARP_REGISTRATION_ID}",
   "time_created": {
     "secs_since_epoch": 1780556998,
     "nanos_since_epoch": 843254960
@@ -42,8 +42,8 @@
   "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIaU7MToJm9NKp8YfGxR6r+/h4mcG\n7SxI8tsW8OR1A5tv/zCzVbCRRh2t87/kxnP6lAy0lkr7qYwu+ox+k3dr6w==\n-----END PUBLIC KEY-----\n",
   "account": {
     "account_type": "free",
-    "id": "{{ c7a5171f-b2f5-44b3-9d0f-b45f00ca77f5 }}",
-    "license": "{{ acb30250-3032-48c2-9ac2-b45f00ca7a79 }}"
+    "id": "${WARP_ACCOUNT_ID}",
+    "license": "${WARP_ACCOUNT_LICENSE}"
   },
   "policy": {
     "onboarding": null,

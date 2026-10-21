@@ -17,7 +17,7 @@ auth:
     maySeeStats: true
     showIndexerSelection: true
     username: "{OBF}VmnHZKHOmv66l/bHaAfltQ=="
-    password: "{{ 308c14d2-e9e9-4326-8d79-b45f00c995e4 }}"
+    password: ${NZBHYDRA2_PASSWORD}
 categoriesConfig:
   enableCategorySizes: true
   categories:
@@ -303,7 +303,7 @@ categoriesConfig:
   overwriteNaWithSearchCategory: false
 downloading:
   downloaders:
-  - apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  - apiKey: ${TORBOX_API_KEY}
     defaultCategory: "Use no category"
     downloadType: "NZB"
     enabled: false
@@ -526,7 +526,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: "{OBF}M19wo8nysiSP5EcPRsTzfdKcBU2ZfwxzPhR60OkcrMop8fxGV7eKHv/D64bD0mcy"
+  apiKey: ${NZBNOOB_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -667,7 +667,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: "{OBF}ZKuBuXG8XvRnJfPqF60R4Q6v3qXlskFbAXEGU+b2iLGLOEG58dx066RKJCHwCEmq"
+  apiKey: ${SCENENZBS_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -925,7 +925,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: true
-  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiKey: ${TORBOX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -968,7 +968,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiKey: ${TORBOX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -1038,7 +1038,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiKey: ${TORBOX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -1108,7 +1108,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: "{OBF}SE8xYOSYgg+Fw648iFvm2bTyKfgDQeHnh4Wo/AZoLJDqmWX9gpmUv29bg5CEE1bp"
+  apiKey: ${MIATRIX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -1343,7 +1343,7 @@ main:
   databaseCompactTime: 15000
   databaseRetentionTime: 1000
   databaseWriteDelay: 5000
-  apiKey: "{OBF}co7R5FHoOPJa3kjzyuazZhhFZQqLQ1PdTfvu6TCYqWo="
+  apiKey: ${NZBHYDRA2_API_KEY}
   dereferer: null
   instanceCounterDownloaded: true
   repositoryBase: "https://github.com/theotherp"
