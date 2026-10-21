@@ -526,7 +526,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: ${NZBKING_API_KEY}
+  apiKey: ${NZBNOOB_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -667,7 +667,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: false
-  apiKey: ${NZBNOOB_API_KEY}
+  apiKey: ${SCENENZBS_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
@@ -925,7 +925,7 @@ indexers:
   attributeWhitelist: []
   attributeWhitelistCategories: []
 - allCapsChecked: true
-  apiKey: ${SCENENZBS_API_KEY}
+  apiKey: ${TORBOX_API_KEY}
   apiPath: null
   backend: "NEWZNAB"
   binsearchOtherGroups: false
