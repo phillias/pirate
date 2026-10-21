@@ -1,0 +1,15 @@
+setup_exit=0
+generated_env_values=PUID=1001,PGID=1002,TZ=UTC
+compose_project_name= pirate-alt_shelfmark-secrets
+shelfmark_service_volume= shelfmark-secrets
+shelfmark_init_present= False
+provider_mappings=
+  - apiKey: "test-torbox_api_key"
+  apiKey: "test-nzbnoob_api_key"
+  apiKey: "test-scenenzbs_api_key"
+  apiKey: "test-torbox_api_key"
+  apiKey: "test-torbox_api_key"
+  apiKey: "test-torbox_api_key"
+  apiKey: "test-miatrix_api_key"
+  apiKey: "test-nzbhydra2_api_key"
+aios_auth_present= True
