@@ -475,5 +475,8 @@ services:
     - 127.0.0.1:8084:8084
     restart: unless-stopped
     volumes:
-    - ./shelfmark/config:/config:rw
+    - shelfmark-secrets:/config:rw
     - ./bookdrop:/books:rshared
+
+volumes:
+  shelfmark-secrets:
