@@ -480,3 +480,4 @@ services:
 
 volumes:
   shelfmark-secrets:
+    name: ${COMPOSE_PROJECT_NAME:-pirate}_shelfmark-secrets
