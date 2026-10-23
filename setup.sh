@@ -11,6 +11,50 @@ BWS_PROJECT_ID="fe9eea09-9eaf-45e6-a72f-b45e0150b29d"
 BWS_TOKEN_FILE="${BWS_TOKEN_FILE:-$HOME/.agents/keys/default/.bws-token}"
 BWS_SECRET_PREFIX="PIRATE_"
 
+# Env vars sourced exclusively from the BWS vault overlay — they must never
+# appear as plaintext in .env.  bws_overlay() already overrides at render
+# time (vault wins), so a stale plaintext copy is functionally inert but a
+# security-hygiene risk (accidental commit, rotation confusion).
+# check_bws_only_vars() below enforces this deterministically.
+BWS_ONLY_VARS=(
+  DATABASE_USERNAME
+  DATABASE_PASSWORD
+  SHADOWSOCKS_PASSWORD
+  WIREGUARD_PRIVATE_KEY
+  HTTP_CONTROL_SERVER_AUTH
+  SHELFMARK_FLASK_SECRET
+  SHELFMARK_BUILTIN_USERNAME
+  SHELFMARK_BUILTIN_PASSWORD_HASH
+  QBITTORRENT_USERNAME
+  QBITTORRENT_PASSWORD
+  TORBOX_API_KEY
+  NZBNOOB_API_KEY
+  SCENENZBS_API_KEY
+  MIATRIX_API_KEY
+  JACKETT_API_KEY
+  NZBHYDRA2_API_KEY
+  PROWLARR_API_KEY
+  JACKETT_ADMIN_PASSWORD
+  JACKETT_INSTANCE_ID
+  JACKETT_OMDB_KEY
+  NZBHYDRA2_PASSWORD
+  WARP_OWN_PUBLIC_KEY
+  WARP_REGISTRATION_ID
+  WARP_ACCOUNT_ID
+  WARP_ACCOUNT_LICENSE
+  STORYTELLER_SECRET_KEY
+  AIOS_SECRET_KEY
+  AIOS_ADDON_PASSWORD
+  AIOS_GDRIVE_CLIENT_SECRET
+  AIOS_TMDB_ACCESS_TOKEN
+  AIOS_TMDB_API_KEY
+  AIOS_TVDB_API_KEY
+  RESTIC_REPOSITORY
+  RESTIC_PASSWORD
+  AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY
+)
+
 decode_dotenv_double() {
   local input="$1" output="" i c next
   for ((i = 0; i < ${#input}; i++)); do
@@ -213,6 +257,25 @@ render_nzbhydra() {
 }
 
 bws_overlay
+
+# ── BWS-only vars hygiene check ──────────────────────────────────────────────
+# Deterministic: scan .env for any BWS_ONLY_VARS present as plaintext.
+# Vault already overrides, so this is a warning — but stale plaintext secrets
+# in .env are a commit-risk and rotation-confusion hazard.
+check_bws_only_vars() {
+  local found=0 var
+  for var in "${BWS_ONLY_VARS[@]}"; do
+    if [ -f .env ] && grep -q "^${var}=" .env 2>/dev/null; then
+      echo "   ⚠️  ${var} is vault-sourced but still in .env — strip it"
+      found=$((found + 1))
+    fi
+  done
+  if [ "$found" -gt 0 ]; then
+    echo "   ⚠️  $found vault-sourced secret(s) found in plaintext .env."
+    echo "      Vault values override at render time, but strip for hygiene."
+  fi
+}
+check_bws_only_vars
 
 [[ "${COMPOSE_PROJECT_NAME:-}" == '${COMPOSE_PROJECT_NAME}' ]] && unset COMPOSE_PROJECT_NAME
 if [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
