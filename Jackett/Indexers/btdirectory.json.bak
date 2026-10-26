@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://btmulu.live/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "cf_clearance=TDeI94aoGytIMX1fZ6GFtyz.a54_juivS9znMkAOCXg-1776568224-1.2.1.1-YQg.NBITgr27FnMGLGYL_Owu4_EA.r3eYpZ5LG0taVJ1sOQ0P4T0FrJCWWtsON5thOlGy1vD2M2Dn_XWO7VG14Hqnopbv18z2rV_sIvRc1I0BqNeuJSTkyCyTao1YaHWL.quQURwh6vl.Mn2RgwGCks.LlsZ1imAagPDY6Wz_1e5GcldMGgR9GIR_jvYWO_ySEgd.faeRWLe30BdXfr.yBHUQxCo0eD5ELE_V0R4YGGTFSwm1v.kEsXmBHr.aD4Z0yP33NUdrn0__ELoamVlOXCKFJAMu8o_uWKhXXsKj41v.m_iISc8lLcklMceEOzsb4TbmVpephjPsBNdMfoZ5w; fad_43e97048036e=d69eb1db8abea275c1847540765e265c44091120041573ae81b79e6e4338ec7fa%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_43e97048036e%22%3Bi%3A1%3Bs%3A31%3A%22%7B%22count%22%3A7%2C%22date%22%3A%222026-04-19%22%7D%22%3B%7D; fad_49988bb46692=69d2b9b04cb08a4f733dbea9476a0097d18e749fc33abd58424ab472174d9eb4a%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_49988bb46692%22%3Bi%3A1%3Bs%3A31%3A%22%7B%22count%22%3A4%2C%22date%22%3A%222026-03-21%22%7D%22%3B%7D; fad_1a0c84bc68f8=142de1f29d11f4fe825dff6f75577776f34495d80246e11ed035effafcb60be8a%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_1a0c84bc68f8%22%3Bi%3A1%3Bs%3A32%3A%22%7B%22count%22%3A11%2C%22date%22%3A%222026-04-19%22%7D%22%3B%7D; fad_1f843c1fdc4e=116c520f88dfc24e38bcee61248953af30904bc2c556fd2f971218160455164aa%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_1f843c1fdc4e%22%3Bi%3A1%3Bs%3A32%3A%22%7B%22count%22%3A18%2C%22date%22%3A%222026-04-03%22%7D%22%3B%7D; fad_a432be8343e8=18c0aa4b2ceba5e67e28adac1477ff6b96ceabb0c329e74c4b8e4bbf8a4e38b4a%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_a432be8343e8%22%3Bi%3A1%3Bs%3A32%3A%22%7B%22count%22%3A16%2C%22date%22%3A%222026-04-19%22%7D%22%3B%7D"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

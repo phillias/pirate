@@ -1,0 +1,1493 @@
+---
+auth:
+  authType: "FORM"
+  rememberUsers: true
+  rememberMeValidityDays: 14
+  authHeader: null
+  authHeaderIpRanges: []
+  restrictAdmin: false
+  restrictDetailsDl: false
+  restrictIndexerSelection: false
+  restrictSearch: true
+  restrictStats: false
+  allowApiStats: true
+  users:
+  - maySeeAdmin: true
+    maySeeDetailsDl: true
+    maySeeStats: true
+    showIndexerSelection: true
+    username: "{OBF}VmnHZKHOmv66l/bHaAfltQ=="
+    password: "{bcrypt}$2a$10$QNsiJdtMIlW.fw71Q7ye4evK9N.z7qVCULVZ1r0jyzM8khfxhIL22"
+categoriesConfig:
+  enableCategorySizes: true
+  categories:
+  - name: "Anime"
+    mayBeSelected: true
+    searchType: "SEARCH"
+    newznabCategories:
+    - "5070"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 3000
+    minSizePreset: 50
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "ANIME"
+  - name: "Audio"
+    mayBeSelected: true
+    searchType: "MUSIC"
+    newznabCategories:
+    - "3000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 2000
+    minSizePreset: 1
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "Audiobook"
+    mayBeSelected: true
+    searchType: "MUSIC"
+    newznabCategories:
+    - "3030"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 1000
+    minSizePreset: 50
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "AUDIOBOOK"
+  - name: "Comic"
+    mayBeSelected: true
+    searchType: "SEARCH"
+    newznabCategories:
+    - "7030"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 250
+    minSizePreset: 1
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "COMIC"
+  - name: "Console"
+    mayBeSelected: true
+    searchType: "SEARCH"
+    newznabCategories:
+    - "1000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 40000
+    minSizePreset: 100
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "Ebook"
+    mayBeSelected: true
+    searchType: "BOOK"
+    newznabCategories:
+    - "7020"
+    - "8010"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 100
+    minSizePreset: null
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "EBOOK"
+  - name: "FLAC"
+    mayBeSelected: true
+    searchType: "MUSIC"
+    newznabCategories:
+    - "3040"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 2000
+    minSizePreset: 10
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "MP3"
+    mayBeSelected: true
+    searchType: "MUSIC"
+    newznabCategories:
+    - "3010"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 500
+    minSizePreset: 1
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "Movies"
+    mayBeSelected: true
+    searchType: "MOVIE"
+    newznabCategories:
+    - "2000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 20000
+    minSizePreset: 500
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "Movies HD"
+    mayBeSelected: true
+    searchType: "MOVIE"
+    newznabCategories:
+    - "2040"
+    - "2045"
+    - "2050"
+    - "2060"
+    - "2070"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 90000
+    minSizePreset: 3000
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "Movies SD"
+    mayBeSelected: true
+    searchType: "MOVIE"
+    newznabCategories:
+    - "2030"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 3000
+    minSizePreset: 500
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "PC"
+    mayBeSelected: true
+    searchType: "SEARCH"
+    newznabCategories:
+    - "4000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 50000
+    minSizePreset: 100
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "TV"
+    mayBeSelected: true
+    searchType: "TVSEARCH"
+    newznabCategories:
+    - "5000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 5000
+    minSizePreset: 50
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "TV HD"
+    mayBeSelected: true
+    searchType: "TVSEARCH"
+    newznabCategories:
+    - "5040"
+    - "5045"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 12000
+    minSizePreset: 300
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "TV SD"
+    mayBeSelected: true
+    searchType: "TVSEARCH"
+    newznabCategories:
+    - "5030"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 1000
+    minSizePreset: 50
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  - name: "XXX"
+    mayBeSelected: true
+    searchType: "SEARCH"
+    newznabCategories:
+    - "6000"
+    ignoreResultsFrom: "NONE"
+    applyRestrictionsType: "BOTH"
+    forbiddenRegex: null
+    forbiddenWords: []
+    requiredRegex: null
+    requiredWords: []
+    maxSizePreset: 10000
+    minSizePreset: 100
+    applySizeLimitsToApi: false
+    description: null
+    preselect: true
+    subtype: "NONE"
+  defaultCategory: "All"
+  overwriteNaWithSearchCategory: false
+downloading:
+  downloaders:
+  - apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+    defaultCategory: "Use no category"
+    downloadType: "NZB"
+    enabled: false
+    iconCssClass: null
+    name: "Torbox"
+    nzbAddingType: "UPLOAD"
+    downloaderType: "TORBOX"
+    url: null
+    username: null
+    password: null
+    addPaused: false
+  saveTorrentsTo: null
+  saveNzbsTo: null
+  sendMagnetLinks: true
+  updateStatuses: true
+  showDownloaderStatus: true
+  nzbAccessType: "PROXY"
+  fallbackForFailed: "BOTH"
+  externalUrl: null
+  primaryDownloader: null
+indexers:
+- allCapsChecked: true
+  apiKey: null
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "ENABLED"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: null
+  host: "https://binsearch.info"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "Binsearch"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "BINSEARCH"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes: []
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: true
+  apiKey: null
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "ENABLED"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: 1
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: null
+  host: "https://nzbindex.com"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "NZBIndex"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NZBINDEX"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes: []
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: true
+  apiKey: null
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "ENABLED"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: 1
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: null
+  host: "https://api.nzbindex.com"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: "Wed, 28 Jan 2026 02:00:40 +0000"
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "NZBIndex API"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NZBINDEX_API"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes: []
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: true
+  apiKey: null
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "DISABLED_USER"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: 1
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: null
+  host: "https://beta.nzbindex.com/search"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "NZBIndex Beta"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NZBINDEX_BETA"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes: []
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: true
+  apiKey: null
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "ENABLED"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: null
+  host: "https://www.nzbking.com/search"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "NZBKing.com"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NZBKING"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes: []
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: false
+  apiKey: "{OBF}M19wo8nysiSP5EcPRsTzfdKcBU2ZfwxzPhR60OkcrMop8fxGV7eKHv/D64bD0mcy"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping:
+    anime: 5070
+    audiobook: 3030
+    comic: 7030
+    ebook: 7020
+    magazine: 7010
+    categories:
+    - id: 2000
+      name: "Movies"
+      subCategories:
+      - id: 2060
+        name: "3D"
+      - id: 2050
+        name: "BluRay"
+      - id: 2010
+        name: "Foreign"
+      - id: 2040
+        name: "HD"
+      - id: 2020
+        name: "Other"
+      - id: 2030
+        name: "SD"
+      - id: 2045
+        name: "UHD"
+    - id: 3000
+      name: "Audio"
+      subCategories:
+      - id: 3030
+        name: "Audiobook"
+      - id: 3040
+        name: "Lossless"
+      - id: 3010
+        name: "MP3"
+      - id: 3050
+        name: "Podcast"
+      - id: 3020
+        name: "Video"
+    - id: 4000
+      name: "PC"
+      subCategories:
+      - id: 4010
+        name: "0day"
+      - id: 4090
+        name: "Bookware"
+      - id: 4050
+        name: "Games"
+    - id: 5000
+      name: "TV"
+      subCategories:
+      - id: 5070
+        name: "Anime"
+      - id: 5080
+        name: "Documentary"
+      - id: 5020
+        name: "Foreign"
+      - id: 5040
+        name: "HD"
+      - id: 5050
+        name: "Other"
+      - id: 5030
+        name: "SD"
+      - id: 5060
+        name: "Sport"
+      - id: 5045
+        name: "UHD"
+    - id: 6000
+      name: "XXX"
+      subCategories:
+      - id: 6010
+        name: "DVD"
+      - id: 6060
+        name: "ImgSet"
+      - id: 6070
+        name: "Other"
+      - id: 6050
+        name: "Pack"
+      - id: 6045
+        name: "UHD"
+      - id: 6020
+        name: "WMV"
+      - id: 6030
+        name: "XviD"
+      - id: 6040
+        name: "x264"
+    - id: 7000
+      name: "Books"
+      subCategories:
+      - id: 7030
+        name: "Comics"
+      - id: 7020
+        name: "Ebook"
+      - id: 7010
+        name: "Mags"
+    - id: 8000
+      name: "Other"
+      subCategories:
+      - id: 8010
+        name: "Misc"
+      - id: 8080
+        name: "Obfuscated"
+  color: null
+  configComplete: false
+  enabledCategories: []
+  downloadLimit: 1
+  forbiddenWordPrefix: "UNSUPPORTED"
+  state: "DISABLED_SYSTEM"
+  enabledForSearchSource: "BOTH"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: 100
+  hitLimitResetTime: 0
+  host: "https://www.nzbnoob.com"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "NzBNooB"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NEWZNAB"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes:
+  - "TVSEARCH"
+  - "MOVIE"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: false
+  apiKey: "{OBF}ZKuBuXG8XvRnJfPqF60R4Q6v3qXlskFbAXEGU+b2iLGLOEG58dx066RKJCHwCEmq"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping:
+    anime: 5070
+    audiobook: 3030
+    comic: 7030
+    ebook: 7020
+    magazine: 7010
+    categories:
+    - id: 3000
+      name: "Audio"
+      subCategories:
+      - id: 3030
+        name: "Audiobook"
+      - id: 3130
+        name: "Audiobook - DE"
+      - id: 3230
+        name: "Audiobook - ES"
+      - id: 3040
+        name: "Lossless"
+      - id: 3010
+        name: "MP3"
+      - id: 3050
+        name: "Other"
+      - id: 3020
+        name: "Video"
+    - id: 7000
+      name: "Books"
+      subCategories:
+      - id: 7030
+        name: "Comics"
+      - id: 7020
+        name: "Ebook"
+      - id: 7010
+        name: "Mags"
+    - id: 7100
+      name: "Books - DE"
+      subCategories:
+      - id: 7130
+        name: "Comics"
+      - id: 7120
+        name: "Ebook"
+      - id: 7110
+        name: "Mags"
+    - id: 1000
+      name: "Console"
+      subCategories:
+      - id: 1010
+        name: "NDS"
+      - id: 1080
+        name: "PS3"
+      - id: 1100
+        name: "PS4"
+      - id: 1110
+        name: "PS5"
+      - id: 1020
+        name: "PSP"
+      - id: 1035
+        name: "Switch"
+      - id: 1030
+        name: "Wii"
+      - id: 1060
+        name: "WiiWare/VC"
+      - id: 1070
+        name: "XBOX 360 DLC"
+      - id: 1040
+        name: "Xbox"
+      - id: 1050
+        name: "Xbox 360"
+      - id: 1090
+        name: "Xbox One"
+    - id: 2000
+      name: "Movies"
+      subCategories:
+      - id: 2060
+        name: "3D"
+      - id: 2050
+        name: "BluRay"
+      - id: 2010
+        name: "Foreign"
+      - id: 2040
+        name: "HD"
+      - id: 2020
+        name: "Other"
+      - id: 2030
+        name: "SD"
+      - id: 2045
+        name: "UHD"
+    - id: 2100
+      name: "Movies - DE"
+      subCategories:
+      - id: 2160
+        name: "3D"
+      - id: 2150
+        name: "BluRay"
+      - id: 2140
+        name: "HD"
+      - id: 2120
+        name: "Other"
+      - id: 2130
+        name: "SD"
+      - id: 2145
+        name: "UHD"
+    - id: 2200
+      name: "Movies - ES"
+      subCategories:
+      - id: 2260
+        name: "3D"
+      - id: 2250
+        name: "BluRay"
+      - id: 2240
+        name: "HD"
+      - id: 2220
+        name: "Other"
+      - id: 2230
+        name: "SD"
+      - id: 2245
+        name: "UHD"
+    - id: 8000
+      name: "Other"
+      subCategories:
+      - id: 8010
+        name: "Misc"
+    - id: 4000
+      name: "PC"
+      subCategories:
+      - id: 4010
+        name: "0day"
+      - id: 4080
+        name: "3D-Print"
+      - id: 4050
+        name: "Games"
+      - id: 4020
+        name: "ISO"
+      - id: 4035
+        name: "Linux"
+      - id: 4030
+        name: "Mac"
+      - id: 4070
+        name: "Mobile-Android"
+      - id: 4040
+        name: "Mobile-Other"
+      - id: 4060
+        name: "Mobile-iOS"
+      - id: 4100
+        name: "Pico"
+      - id: 4090
+        name: "Tutorials"
+    - id: 5000
+      name: "TV"
+      subCategories:
+      - id: 5070
+        name: "Anime"
+      - id: 5080
+        name: "Documentary"
+      - id: 5020
+        name: "Foreign"
+      - id: 5040
+        name: "HD"
+      - id: 5050
+        name: "Other"
+      - id: 5030
+        name: "SD"
+      - id: 5060
+        name: "Sport"
+      - id: 5045
+        name: "UHD"
+    - id: 5100
+      name: "TV - DE"
+      subCategories:
+      - id: 5170
+        name: "Anime"
+      - id: 5180
+        name: "Documentary"
+      - id: 5140
+        name: "HD"
+      - id: 5150
+        name: "Other"
+      - id: 5130
+        name: "SD"
+      - id: 5160
+        name: "Sport"
+      - id: 5145
+        name: "UHD"
+    - id: 5200
+      name: "TV - ES"
+      subCategories:
+      - id: 5270
+        name: "Anime"
+      - id: 5280
+        name: "Documentary"
+      - id: 5240
+        name: "HD"
+      - id: 5250
+        name: "Other"
+      - id: 5230
+        name: "SD"
+      - id: 5260
+        name: "Sport"
+      - id: 5245
+        name: "UHD"
+    - id: 6000
+      name: "XXX"
+      subCategories:
+      - id: 6010
+        name: "DVD"
+      - id: 6060
+        name: "ImgSet"
+      - id: 6070
+        name: "Other"
+      - id: 6050
+        name: "Pack"
+      - id: 6020
+        name: "WMV"
+      - id: 6030
+        name: "XviD"
+      - id: 6040
+        name: "x264"
+  color: null
+  configComplete: false
+  enabledCategories: []
+  downloadLimit: 5
+  forbiddenWordPrefix: "EXCLAMATION_MARK"
+  state: "DISABLED_SYSTEM"
+  enabledForSearchSource: "BOTH"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: 100
+  hitLimitResetTime: 0
+  host: "https://scenenzbs.com"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "SceneNZBs"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NEWZNAB"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes:
+  - "TVSEARCH"
+  - "MOVIE"
+  - "BOOK"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: true
+  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping: null
+  color: null
+  configComplete: true
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNKNOWN"
+  state: "ENABLED"
+  enabledForSearchSource: "INTERNAL"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: 0
+  host: "https://search-api.torbox.app"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "Torbox"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "TORBOX"
+  showOnSearch: true
+  supportedSearchIds:
+  - "IMDB"
+  supportedSearchTypes:
+  - "MOVIE"
+  - "SEARCH"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: false
+  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping:
+    anime: null
+    audiobook: null
+    comic: null
+    ebook: null
+    magazine: null
+    categories:
+    - id: 2000
+      name: "Movies"
+      subCategories:
+      - id: 2010
+        name: "Movies/Foreign"
+      - id: 2020
+        name: "Movies/Other"
+      - id: 2030
+        name: "Movies/SD"
+      - id: 2040
+        name: "Movies/HD"
+      - id: 2050
+        name: "Movies/UHD"
+    - id: 5000
+      name: "TV"
+      subCategories:
+      - id: 5030
+        name: "TV/SD"
+      - id: 5040
+        name: "TV/HD"
+      - id: 5050
+        name: "TV/UHD"
+  color: null
+  configComplete: false
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNSUPPORTED"
+  state: "DISABLED_SYSTEM"
+  enabledForSearchSource: "BOTH"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: 0
+  host: "https://search-api.torbox.app/newznab"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "Torbox (Newznab)"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NEWZNAB"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes:
+  - "TVSEARCH"
+  - "MOVIE"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: false
+  apiKey: "{OBF}4luGKpaBuKIrEe3cltAB5qYBmLqyer/lFWW9q87BLXslADunzm7afSqUEnxqvjM2"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping:
+    anime: null
+    audiobook: null
+    comic: null
+    ebook: null
+    magazine: null
+    categories:
+    - id: 2000
+      name: "Movies"
+      subCategories:
+      - id: 2010
+        name: "Movies/Foreign"
+      - id: 2020
+        name: "Movies/Other"
+      - id: 2030
+        name: "Movies/SD"
+      - id: 2040
+        name: "Movies/HD"
+      - id: 2050
+        name: "Movies/UHD"
+    - id: 5000
+      name: "TV"
+      subCategories:
+      - id: 5030
+        name: "TV/SD"
+      - id: 5040
+        name: "TV/HD"
+      - id: 5050
+        name: "TV/UHD"
+  color: null
+  configComplete: false
+  enabledCategories: []
+  downloadLimit: null
+  forbiddenWordPrefix: "UNSUPPORTED"
+  state: "DISABLED_SYSTEM"
+  enabledForSearchSource: "BOTH"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: null
+  hitLimitResetTime: 0
+  host: "https://search-api.torbox.app/torznab"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 0
+  disabledAt: null
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "Torbox (Torrents)"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "TORZNAB"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes:
+  - "TVSEARCH"
+  - "MOVIE"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+- allCapsChecked: false
+  apiKey: "{OBF}SE8xYOSYgg+Fw648iFvm2bTyKfgDQeHnh4Wo/AZoLJDqmWX9gpmUv29bg5CEE1bp"
+  apiPath: null
+  backend: "NEWZNAB"
+  binsearchOtherGroups: false
+  categoryMapping:
+    anime: 5070
+    audiobook: 3030
+    comic: 7030
+    ebook: 7020
+    magazine: 7010
+    categories:
+    - id: 1000
+      name: "Console"
+      subCategories:
+      - id: 1110
+        name: "3DS"
+      - id: 1010
+        name: "NDS"
+      - id: 1090
+        name: "Other"
+      - id: 1120
+        name: "PS Vita"
+      - id: 1080
+        name: "PS3"
+      - id: 1100
+        name: "PS4"
+      - id: 1180
+        name: "PS4"
+      - id: 1020
+        name: "PSP"
+      - id: 1035
+        name: "Switch"
+      - id: 1030
+        name: "Wii"
+      - id: 1130
+        name: "WiiU"
+      - id: 1060
+        name: "WiiWare/VC"
+      - id: 1070
+        name: "XBOX 360 DLC"
+      - id: 1040
+        name: "Xbox"
+      - id: 1050
+        name: "Xbox 360"
+      - id: 1140
+        name: "Xbox One"
+    - id: 2000
+      name: "Movies"
+      subCategories:
+      - id: 2050
+        name: "3D"
+      - id: 2060
+        name: "BluRay"
+      - id: 2070
+        name: "DVD"
+      - id: 2010
+        name: "Foreign"
+      - id: 2040
+        name: "HD"
+      - id: 2020
+        name: "Other"
+      - id: 2030
+        name: "SD"
+      - id: 2045
+        name: "UHD"
+    - id: 3000
+      name: "Audio"
+      subCategories:
+      - id: 3030
+        name: "Audiobook"
+      - id: 3060
+        name: "Foreign"
+      - id: 3040
+        name: "Lossless"
+      - id: 3010
+        name: "MP3"
+      - id: 3050
+        name: "Other"
+      - id: 3020
+        name: "Video"
+    - id: 4000
+      name: "PC"
+      subCategories:
+      - id: 4010
+        name: "0day"
+      - id: 4050
+        name: "Games"
+      - id: 4020
+        name: "ISO"
+      - id: 4030
+        name: "Mac"
+      - id: 4070
+        name: "Mobile-Android"
+      - id: 4040
+        name: "Mobile-Other"
+      - id: 4060
+        name: "Mobile-iOS"
+    - id: 5000
+      name: "TV"
+      subCategories:
+      - id: 5070
+        name: "Anime"
+      - id: 5080
+        name: "Documentary"
+      - id: 5020
+        name: "Foreign"
+      - id: 5040
+        name: "HD"
+      - id: 5050
+        name: "Other"
+      - id: 5030
+        name: "SD"
+      - id: 5060
+        name: "Sport"
+      - id: 5045
+        name: "UHD"
+      - id: 5010
+        name: "WEB-DL"
+    - id: 6000
+      name: "XXX"
+      subCategories:
+      - id: 6010
+        name: "DVD"
+      - id: 6060
+        name: "ImgSet"
+      - id: 6070
+        name: "Other"
+      - id: 6050
+        name: "Pack"
+      - id: 6020
+        name: "WMV"
+      - id: 6030
+        name: "XviD"
+      - id: 6040
+        name: "x264"
+    - id: 7000
+      name: "Books"
+      subCategories:
+      - id: 7030
+        name: "Comics"
+      - id: 7020
+        name: "Ebook"
+      - id: 7060
+        name: "Foreign"
+      - id: 7010
+        name: "Mags"
+      - id: 7050
+        name: "Other"
+      - id: 7040
+        name: "Technical"
+    - id: 8000
+      name: "Other"
+      subCategories:
+      - id: 8020
+        name: "Hashed"
+      - id: 8010
+        name: "Misc"
+  color: null
+  configComplete: false
+  enabledCategories: []
+  downloadLimit: 2
+  forbiddenWordPrefix: "UNSUPPORTED"
+  state: "DISABLED_SYSTEM"
+  enabledForSearchSource: "BOTH"
+  generalMinSize: null
+  groupNames: []
+  hitLimit: 100
+  hitLimitResetTime: 0
+  host: "https://www.miatrix.com"
+  lastError: null
+  disabledUntil: null
+  disabledLevel: 31
+  disabledAt: "Sun, 15 Feb 2026 02:07:17 +0000"
+  loadLimitOnRandom: null
+  minSeeders: null
+  name: "miatrix"
+  password: null
+  customParameters: []
+  preselect: true
+  schedule: []
+  score: 0
+  searchModuleType: "NEWZNAB"
+  showOnSearch: true
+  supportedSearchIds: []
+  supportedSearchTypes:
+  - "TVSEARCH"
+  - "MOVIE"
+  - "AUDIO"
+  timeout: null
+  username: null
+  userAgent: null
+  vipExpirationDate: null
+  attributeWhitelist: []
+  attributeWhitelistCategories: []
+main:
+  configVersion: 23
+  host: "0.0.0.0"
+  port: 5076
+  urlBase: "/"
+  proxyType: "SOCKS"
+  proxyHost: "{OBF}qQ/S5IInVV7oXcupwmmoWQ=="
+  proxyPort: 1080
+  proxyIgnoreLocal: true
+  proxyIgnoreDomains: []
+  proxyUsername: null
+  proxyPassword: null
+  proxyImages: false
+  backupFolder: "backup"
+  backupEveryXDays: 7
+  backupBeforeUpdate: true
+  deleteBackupsAfterWeeks: 4
+  keepHistory: true
+  keepStatsForWeeks: null
+  keepHistoryForWeeks: null
+  ssl: false
+  sslKeyStore: null
+  sslKeyStorePassword: null
+  verifySsl: true
+  disableSslLocally: false
+  sniDisabledFor: []
+  verifySslDisabledFor: []
+  updateAutomatically: false
+  updateToPrereleases: false
+  updateCheckEnabled: true
+  showWhatsNewBanner: true
+  showNews: true
+  startupBrowser: true
+  checkOpenPort: true
+  welcomeShown: true
+  disableTour: false
+  theme: "grey"
+  indexerSelectionAsCheckboxes: false
+  databaseCompactTime: 15000
+  databaseRetentionTime: 1000
+  databaseWriteDelay: 5000
+  apiKey: "{OBF}co7R5FHoOPJa3kjzyuazZhhFZQqLQ1PdTfvu6TCYqWo="
+  dereferer: null
+  instanceCounterDownloaded: true
+  repositoryBase: "https://github.com/theotherp"
+  shutdownForRestart: false
+  useCsrf: true
+  xmx: 256
+  customVmOptions: null
+  scheduledRestartTime: null
+  logging:
+    consolelevel: "INFO"
+    historyUserInfoType: "NONE"
+    logIpAddresses: true
+    mapIpToHost: false
+    logGc: false
+    logMaxHistory: 30
+    logfilelevel: "INFO"
+    logUsername: false
+    markersToLog: []
+  showUpdateBannerOnDocker: true
+searching:
+  applyRestrictions: "NONE"
+  coverSize: 128
+  customMappings: []
+  globalCacheTimeMinutes: null
+  duplicateAgeThreshold: 2.0
+  duplicateSizeThresholdInPercent: 1.0
+  forbiddenGroups: []
+  forbiddenPosters: []
+  forbiddenRegex: null
+  forbiddenWords: []
+  alwaysConvertIds: "NONE"
+  generateQueries: "INTERNAL"
+  generateQueriesFormat: "TITLE"
+  historyForSearching: 25
+  idFallbackToQueryGeneration: "NONE"
+  ignorePassworded: false
+  ignoreTemporarilyDisabled: false
+  ignoreLoadLimitingForInternalSearches: false
+  ignoreLoadLimitingForConcreteApiSearches: false
+  keepSearchResultsForDays: 14
+  language: "en"
+  languagesToKeep: []
+  loadAllCachedOnInternal: true
+  loadLimitInternal: 100
+  maxAge: null
+  minSeeders: null
+  removeTrailing:
+  - ".mp4"
+  - ".mkv"
+  - ".subs"
+  - ".REPOST"
+  - "repost"
+  - "~DG~"
+  - ".DG"
+  - "-DG"
+  - "-1"
+  - ".1"
+  - "(1)"
+  - "ReUp"
+  - "ReUp2"
+  - "-RP"
+  - "-AsRequested"
+  - "-Obfuscated"
+  - "-Scrambled"
+  - "-Chamele0n"
+  - "-BUYMORE"
+  - "-[TRP]"
+  - "-DG"
+  - ".par2"
+  - ".part01"
+  - "part01.rar"
+  - ".part02.rar"
+  - ".jpg"
+  - "[rartv]"
+  - "[rarbg]"
+  - "[eztv]"
+  - "English"
+  - "Korean"
+  - "Spanish"
+  - "French"
+  - "German"
+  - "Italian"
+  - "Danish"
+  - "Dutch"
+  - "Japanese"
+  - "Cantonese"
+  - "Mandarin"
+  - "Russian"
+  - "Polish"
+  - "Vietnamese"
+  - "Swedish"
+  - "Norwegian"
+  - "Finnish"
+  - "Turkish"
+  - "Portuguese"
+  - "Flemish"
+  - "Greek"
+  - "Hungarian"
+  - "-xpost"
+  replaceUmlauts: false
+  requiredRegex: null
+  requiredWords: []
+  sendTorznabCategories: true
+  showQuickFilterButtons: true
+  alwaysShowQuickFilterButtons: false
+  customQuickFilterButtons: []
+  preselectQuickFilterButtons: []
+  timeout: 20
+  transformNewznabCategories: true
+  userAgent: "NZBHydra2"
+  userAgents:
+  - "Mozilla"
+  - "Sonarr"
+  - "Radarr"
+  - "CouchPotato"
+  - "LazyLibrarian"
+  - "Lidarr"
+  - "Mylar"
+  - "Readarr"
+  - "NZB360"
+  - "NZBGet"
+  - "sabNZBd"
+  useOriginalCategories: false
+  wrapApiErrors: false
+  showMovieQualityIndicator: false
+  savedSearches: []
+notificationConfig:
+  appriseType: "NONE"
+  appriseApiUrl: null
+  appriseCliPath: null
+  displayNotifications: true
+  displayNotificationsMax: 5
+  entries: []
+  filterOuts: []
+emby:
+  embyBaseUrl: null
+  embyApiKey: null
+externalTools:
+  externalTools: []
+  syncOnConfigChange: true
+genericStorage:
+  belowJava17: "false"
+  FirstStart: "\"2026-01-12T09:41:10.669005\""
+  PORT_OPEN_LAST_CHECK: "\"2026-01-12T14:41:11.622519Z\""
+  showOpenToInternetWithoutAuth: "\"false\""
+  outdatedWrapperDetected: "false"
+  BackupData: "{\"lastBackup\":\"2026-05-23T14:44:40.968781\"}"

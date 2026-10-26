@@ -1,0 +1,72 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://seedpool.org/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": ""
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": "Exception (seedpool-api): The response ended prematurely. (ResponseEnded): An error occurred while sending the request."
+  },
+  {
+    "id": "apikey",
+    "type": "inputstring",
+    "name": "APIKey",
+    "value": "DX7EQndFiWUnArcH6BnznmpGHaKDZXiVV8XkCZIpJWkfHX37bQbpxoRCXaFIWWOfBGYM9JXCy8fSGG3NSEwqPpyMhbXVMAtlTVmF"
+  },
+  {
+    "id": "searchfreeleechonly",
+    "type": "inputbool",
+    "name": "Search freeleech only",
+    "value": true
+  },
+  {
+    "id": "disableimdbandtvdbidsearch(onlysupporttmdbid)topotentiallyimprovesonarrandradarrresults",
+    "type": "inputbool",
+    "name": "Disable IMDB and TVDB ID search (only support TMDB ID) to potentially improve Sonarr and Radarr results",
+    "value": true
+  },
+  {
+    "id": "usefilenameastitleforsinglefilereleases",
+    "type": "inputbool",
+    "name": "Use filename as title for single file releases",
+    "value": true
+  },
+  {
+    "id": "sortrequestedfromsite",
+    "type": "inputselect",
+    "name": "Sort requested from site",
+    "value": "created_at",
+    "options": {
+      "created_at": "created",
+      "seeders": "seeders",
+      "size": "size",
+      "name": "title"
+    }
+  },
+  {
+    "id": "orderrequestedfromsite",
+    "type": "inputselect",
+    "name": "Order requested from site",
+    "value": "desc",
+    "options": {
+      "desc": "desc",
+      "asc": "asc"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

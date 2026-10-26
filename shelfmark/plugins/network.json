@@ -1,0 +1,6 @@
+{
+  "CUSTOM_DNS": "cloudflare",
+  "USE_DOH": true,
+  "USING_TOR": false,
+  "PROXY_MODE": "none"
+}

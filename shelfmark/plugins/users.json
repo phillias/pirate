@@ -1,0 +1,13 @@
+{
+  "VISIBLE_SELF_SETTINGS_SECTIONS": [
+    "delivery",
+    "search",
+    "notifications"
+  ],
+  "REQUESTS_ENABLED": false,
+  "REQUEST_POLICY_DEFAULT_EBOOK": "download",
+  "REQUEST_POLICY_DEFAULT_AUDIOBOOK": "download",
+  "REQUEST_POLICY_RULES": [],
+  "MAX_PENDING_REQUESTS_PER_USER": 20,
+  "REQUESTS_ALLOW_NOTES": true
+}
