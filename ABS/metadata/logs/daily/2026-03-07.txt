@@ -1,3 +1,0 @@
-{"timestamp":"2026-03-07 00:30:00.867","source":"CronManager.js:44","message":"[CronManager] Open session cleanup cron executing","levelName":"DEBUG","level":1}
-{"timestamp":"2026-03-07 00:30:00.868","source":"ApiCacheManager.js:20","message":"[ApiCacheManager] Object.afterBulkDestroy: Clearing cache","levelName":"DEBUG","level":1}
-{"timestamp":"2026-03-07 00:30:00.870","source":"ApiCacheManager.js:20","message":"[ApiCacheManager] Object.afterBulkUpdate: Clearing cache","levelName":"DEBUG","level":1}

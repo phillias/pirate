@@ -84,3 +84,15 @@ AIOS/data/instance-id
 restic-backup.log
 # phase-2 prep secret archives (tarballs of env/DB exports)
 .volume-exports/
+
+# --- Leak remediation (2026-10-26): live app data carries secrets
+# (tracker session cookies, API keys, password hashes, DB contents).
+# Entirely untracked; templates/ holds the envsubst seed copies.
+/Jackett/
+/prowlarr/
+/nzbhydra2/
+/shelfmark/
+/storyteller/
+/booklore/
+/ABS/
+/qbit/
