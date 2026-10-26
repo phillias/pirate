@@ -1,3 +1,10 @@
+# FROZEN SNAPSHOT — do not run or modify
+
+This directory is a **frozen snapshot** (chowned root 2026-10-26). The LIVE
+pirate stack runs from `~/firstmate/projects/pirate` (compose + bind mounts +
+BWS `PIRATE_*` secrets). Rotate credentials there; changes here are
+historical only and mirror to the public repo phillias/pirate.
+
 # Pirate Suite
 ## For pirating media.  Movies, Series, ebooks, audiobooks
 docker compose for aiometadata, aiostreams, syncio, jackett, prowlarr, nzbhydra2, audiobookrequest, audiobookshelf, shelfmark, openbooks, etc.
