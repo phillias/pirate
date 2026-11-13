@@ -314,7 +314,7 @@ if [ -z "$SHELFMARK_VOLUME" ]; then
 fi
 
 if [ -f .env.template ]; then
-  render_dotenv .env.template .env 600 "COMPOSE_PROJECT_NAME PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH"
+  render_dotenv .env.template .env 600 "COMPOSE_PROJECT_NAME PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH GDRIVE_PHILLIAS_PATH"
 fi
 
 mkdir -p "$SHELF_STAGE/plugins" decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp

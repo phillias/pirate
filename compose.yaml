@@ -384,7 +384,7 @@ services:
     - ./shared/:/shared:rshared
     - ./shared/bookdrop:/bookdrop
     - ./shared/torbox:/torbox
-    - /home/ubuntu/docker/flexget/gdrive-phillias:/gdrive-phillias:ro,rslave
+    - ${GDRIVE_PHILLIAS_PATH:-/home/ubuntu/docker/flexget/gdrive-phillias}:/gdrive-phillias:ro,rslave
     deploy:
       resources:
         limits:
