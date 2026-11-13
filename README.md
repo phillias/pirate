@@ -1,14 +1,14 @@
-# FROZEN SNAPSHOT — do not run or modify
-
-This directory is a **frozen snapshot** (chowned root 2026-10-26). The LIVE
-pirate stack runs from `~/firstmate/projects/pirate` (compose + bind mounts +
-BWS `PIRATE_*` secrets). Rotate credentials there; changes here are
-historical only and mirror to the public repo phillias/pirate.
-
 # Pirate Suite
+
+This repository contains the Pirate media suite and its greenfield deployment
+entry point, `greenfield.sh`. The script provisions a fresh installation,
+while `setup.sh` renders service configuration from the repository templates
+and BWS `PIRATE_*` secrets. See `AGENTS.md` for deployment architecture and
+operational details.
+
 ## For pirating media.  Movies, Series, ebooks, audiobooks
 docker compose for aiometadata, aiostreams, syncio, jackett, prowlarr, nzbhydra2, audiobookrequest, audiobookshelf, shelfmark, openbooks, etc.
-all relative directory bind mounts
+mostly relative directory bind mounts; the optional Google Drive mount can use an external host path via `GDRIVE_PHILLIAS_PATH`
 
 cloudflare and proton vpn's.  Flaresolverr/Byparr for cloudflare human checks.
 

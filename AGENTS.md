@@ -191,6 +191,29 @@ must be reachable before grimmory starts; until it is, grimmory
 crash-loops. Its healthcheck (`/actuator/health`) reflects database
 state.
 
+## 8. Greenfield deployment
+
+`greenfield.sh` is the fresh-install entry point. It replaces the old
+manual checklist with a guided, optionally automated flow:
+
+- **`--generate-secrets`**: auto-generates API keys, passwords, hashes,
+  and writes them to BWS. About half the secrets are auto-generatable;
+  the rest require external account values (Proton WireGuard key,
+  Torbox API key, TMDB/TVDB keys, indexer keys, restic/AWS backup
+  creds). After auto-generation, the script prints a captain-required
+  checklist with per-secret source URLs.
+- **Warp registration**: semi-automated — the script can extract
+  `WARP_*` vars from `warp/conf.json` after the captain runs the
+  registration container once.
+- **MariaDB**: attempts auto-create of the `grimmory` database and
+  user if `mysql` client is available and root has no password; falls
+  back to printed SQL commands.
+- **`GDRIVE_PHILLIAS_PATH`**: compose.yaml now reads this from env,
+  defaulting to `/home/ubuntu/docker/flexget/gdrive-phillias` while allowing
+  hosts with a different rclone mount path to override it.
+
+Run `./greenfield.sh --help` for all options.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
