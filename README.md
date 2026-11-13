@@ -8,7 +8,7 @@ operational details.
 
 ## For pirating media.  Movies, Series, ebooks, audiobooks
 docker compose for aiometadata, aiostreams, syncio, jackett, prowlarr, nzbhydra2, audiobookrequest, audiobookshelf, shelfmark, openbooks, etc.
-all relative directory bind mounts
+mostly relative directory bind mounts; the optional Google Drive mount can use an external host path via `GDRIVE_PHILLIAS_PATH`
 
 cloudflare and proton vpn's.  Flaresolverr/Byparr for cloudflare human checks.
 
