@@ -1,0 +1,60 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║       Pirate Media Suite — Greenfield Deployment            ║
+╚══════════════════════════════════════════════════════════════╝
+
+[1;33m[!] DRY RUN MODE — no changes will be made[0m
+
+
+[1m=== Step 0: Prerequisites check ===[0m
+[0;32m[+] BWS token found[0m
+[0;32m[+] Prerequisites check passed[0m
+
+[1m=== Step 1: Create directories and Docker volumes ===[0m
+[0;34m[*] [DRY RUN] Would create: decypharr/data[0m
+[0;34m[*] [DRY RUN] Would create: prowlarr/config[0m
+[0;34m[*] [DRY RUN] Would create: jackett/config/Jackett[0m
+[0;34m[*] [DRY RUN] Would create: nzbhydra2/config[0m
+[0;34m[*] [DRY RUN] Would create: nzbhydra2/downloads[0m
+[0;32m[+] Exists: grimmory[0m
+[0;34m[*] [DRY RUN] Would create: storyteller[0m
+[0;34m[*] [DRY RUN] Would create: warp[0m
+[0;32m[+] Exists: proton[0m
+[0;34m[*] [DRY RUN] Would create: AIOS/data[0m
+[0;34m[*] [DRY RUN] Would create: ABR/config[0m
+[0;34m[*] [DRY RUN] Would create: ABS/config[0m
+[0;34m[*] [DRY RUN] Would create: ABS/metadata[0m
+[0;34m[*] [DRY RUN] Would create: shared/blackhole[0m
+[0;34m[*] [DRY RUN] Would create: shared/books[0m
+[0;34m[*] [DRY RUN] Would create: shared/torbox[0m
+[0;34m[*] [DRY RUN] Would create: shared/bookdrop[0m
+[0;32m[+] Exists: bookdrop[0m
+[0;32m[+] Exists: shelfmark[0m
+[0;34m[*] [DRY RUN] Would create: mnt[0m
+[0;32m[+] Docker volume exists: pirate_shelfmark-secrets[0m
+
+[1m=== Step 6: Create .env from template ===[0m
+[0;34m[*] [DRY RUN] Would copy .env.template to .env[0m
+[1;33m[!] Skipping BWS setup (--skip-bws)[0m
+[1;33m[!] Skipping Warp registration (--skip-warp)[0m
+[1;33m[!] Skipping Proton VPN config (--skip-proton)[0m
+[1;33m[!] Skipping MariaDB setup (--skip-mariadb)[0m
+
+[1m=== Step 7: Run setup.sh to render all configs ===[0m
+[0;34m[*] [DRY RUN] Would run: ./setup.sh[0m
+
+[1m=== Step 8: Start Docker Compose stack (profile: books) ===[0m
+[0;34m[*] [DRY RUN] Would run: docker compose --profile books up -d[0m
+[1;33m[!] Skipping health checks (--skip-healthcheck)[0m
+
+[1m=== Step 10: Captain-required next steps ===[0m
+Post-deploy actions:
+  - Access services via godoxy reverse proxy
+  - Check logs: docker compose logs -f <service>
+  - Run backups: ./restic-backup.sh
+  - Restore: ./restore.sh -a <app> -t <time>
+  - Re-render configs after BWS updates: ./setup.sh
+
+╔══════════════════════════════════════════════════════════════╗
+║                    Deployment Complete!                      ║
+╚══════════════════════════════════════════════════════════════╝
