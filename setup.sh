@@ -127,6 +127,7 @@ else
   echo "⚠️  No .env found, relying on BWS overlay only"
 fi
 
+BWS_APPLIED=" "
 bws_overlay() {
   local fetched=0 k v name
   if command -v bws >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && [ -r "$BWS_TOKEN_FILE" ]; then
@@ -135,6 +136,7 @@ bws_overlay() {
       [[ "$k" == "$BWS_SECRET_PREFIX"* && "$name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || continue
       [[ "$name" == COMPOSE_PROJECT_NAME && -v COMPOSE_PROJECT_NAME ]] && continue
       export "$name=$v"
+      BWS_APPLIED+="$name "
       fetched=$((fetched + 1))
     done < <(BWS_ACCESS_TOKEN="$(cat "$BWS_TOKEN_FILE")" bws secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -j --arg pfx "$BWS_SECRET_PREFIX" '.[] | select(.key | startswith($pfx)) | .key, "\u0000", .value, "\u0000"'); then
       echo "   ⚠️  BWS fetch failed (token revoked? network?)"
@@ -265,7 +267,8 @@ bws_overlay
 check_bws_only_vars() {
   local found=0 var
   for var in "${BWS_ONLY_VARS[@]}"; do
-    if [ -f .env ] && grep -q "^${var}=" .env 2>/dev/null; then
+    [[ "$BWS_APPLIED" == *" $var "* ]] || continue
+    if [ -f .env ] && grep -Eq "^${var}=[\"']?[^\"'[:space:]\$]" .env 2>/dev/null; then
       echo "   ⚠️  ${var} is vault-sourced but still in .env — strip it"
       found=$((found + 1))
     fi
@@ -315,7 +318,19 @@ fi
 
 if [ -f .env.template ]; then
   GDRIVE_PHILLIAS_PATH="${GDRIVE_PHILLIAS_PATH:-}"
-  render_dotenv .env.template .env 600 "COMPOSE_PROJECT_NAME PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH GDRIVE_PHILLIAS_PATH"
+  # Compose interpolates these from .env, so they are always written.
+  COMPOSE_ENV_VARS="COMPOSE_PROJECT_NAME PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH GDRIVE_PHILLIAS_PATH"
+  # Every other template var is rendered too, so plaintext (non-BWS) values
+  # survive the re-render; vault-sourced ones are blanked to keep them out of .env.
+  (
+    env_vars="$COMPOSE_ENV_VARS"
+    for name in $REQUIRED_VARS; do
+      [[ " $COMPOSE_ENV_VARS " == *" $name "* ]] && continue
+      env_vars+=" $name"
+      [[ "$BWS_APPLIED" == *" $name "* ]] && export "$name="
+    done
+    render_dotenv .env.template .env 600 "$env_vars"
+  )
 fi
 
 mkdir -p "$SHELF_STAGE/plugins" decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp
