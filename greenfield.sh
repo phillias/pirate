@@ -245,15 +245,12 @@ setup_bws() {
   fi
 
   if bws_run project get "$BWS_PROJECT_ID" >/dev/null 2>&1; then
-    log_ok "BWS project exists: $BWS_PROJECT_ID"
+    log_ok "BWS project found: $BWS_PROJECT_ID (phillias)"
   else
-    log_warn "BWS project not found: $BWS_PROJECT_ID"
-    log_warn "Create it with: bws project create --name pirate --organization <org-id>"
-    log_warn "Then set BWS_PROJECT_ID env var or update this script"
-    if [ "$DRY_RUN" != true ]; then
-      read -rp "Have you created the BWS project? [y/N] " confirm
-      [[ "$confirm" =~ ^[Yy]$ ]] || { log_error "Create BWS project first"; return 1; }
-    fi
+    log_error "BWS project not found: $BWS_PROJECT_ID"
+    log_error "This script uses the existing 'phillias' project which holds all PIRATE_* secrets."
+    log_error "Ensure BWS_TOKEN is set and the project is accessible."
+    return 1
   fi
 
   local existing_keys
