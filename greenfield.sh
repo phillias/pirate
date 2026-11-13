@@ -30,14 +30,12 @@ bws_run() {
 gen_hex() { openssl rand -hex "${1:-16}"; }
 gen_uuid() { uuidgen 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())"; }
 gen_password() { openssl rand -base64 24 | tr -d '=/+' | head -c 32; }
-gen_bcrypt() {
+gen_password_hash() {
   local password="$1"
-  if command -v htpasswd >/dev/null 2>&1; then
-    htpasswd -nbBC 12 "" "$password" | tr -d ':\n' | sed 's/$2y/$2b/'
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -c "import bcrypt; print(bcrypt.hashpw(b'$password', bcrypt.gensalt(12)).decode())"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$password"
   else
-    log_error "Need htpasswd or python3+bcrypt for password hashing"
+    log_error "Need python3 with Werkzeug for password hashing"
     return 1
   fi
 }
@@ -277,6 +275,7 @@ generate_and_provision_secrets() {
   local existing_keys="$1"
   local generated=0
   local skipped=0
+  local failed=0
 
   log_info "Auto-generating secrets and writing to BWS..."
 
@@ -310,7 +309,7 @@ generate_and_provision_secrets() {
       SHELFMARK_BUILTIN_PASSWORD_HASH)
         local plain_pw
         plain_pw=$(gen_password)
-        value=$(gen_bcrypt "$plain_pw") || { log_error "Cannot hash password"; continue; }
+        value=$(gen_password_hash "$plain_pw") || { log_error "Cannot hash password"; failed=$((failed + 1)); continue; }
         GENERATED_SECRETS[SHELFMARK_BUILTIN_PASSWORD]="$plain_pw"
         ;;
       QBITTORRENT_PASSWORD)
@@ -324,16 +323,21 @@ generate_and_provision_secrets() {
       log_info "[DRY RUN] Would create BWS secret: $bws_key"
       generated=$((generated + 1))
     else
-      if bws_run secret create "$BWS_PROJECT_ID" --key "$bws_key" --value "$value" >/dev/null 2>&1; then
+      if bws_run secret create "$bws_key" "$value" "$BWS_PROJECT_ID" >/dev/null 2>&1; then
         log_ok "Created BWS secret: $bws_key"
         generated=$((generated + 1))
       else
         log_error "Failed to create BWS secret: $bws_key"
+        failed=$((failed + 1))
       fi
     fi
   done <<< "$AUTO_GENERATABLE_VARS"
 
   log_info "Generated $generated secrets, skipped $skipped existing"
+  if [ "$failed" -gt 0 ]; then
+    log_error "$failed secret(s) failed to provision"
+    return 1
+  fi
   log_ok "Auto-generatable secrets provisioned"
 
   local captain_missing=0
@@ -455,6 +459,7 @@ extract_warp_secrets() {
   account_license=$(jq -r '.account.license // empty' ./warp/conf.json 2>/dev/null || true)
 
   local wrote=0
+  local failed=0
   for varname in WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE; do
     local bws_key="${BWS_SECRET_PREFIX}${varname}"
     local value=""
@@ -481,17 +486,27 @@ extract_warp_secrets() {
     if [ "$DRY_RUN" = true ]; then
       log_info "[DRY RUN] Would create BWS secret: $bws_key"
     else
-      if bws_run secret create "$BWS_PROJECT_ID" --key "$bws_key" --value "$value" >/dev/null 2>&1; then
+      if bws_run secret create "$bws_key" "$value" "$BWS_PROJECT_ID" >/dev/null 2>&1; then
         log_ok "Created BWS secret: $bws_key"
         wrote=$((wrote + 1))
         unset "MISSING_CAPTAIN[$varname]"
       else
         log_error "Failed to create BWS secret: $bws_key"
+        failed=$((failed + 1))
       fi
     fi
   done
 
-  [ "$wrote" -gt 0 ] && log_ok "Wrote $wrote Warp secrets to BWS"
+  if [ "$failed" -gt 0 ]; then
+    log_error "$failed Warp secret(s) failed to provision"
+    return 1
+  fi
+  if [ "$wrote" -gt 0 ]; then
+    log_ok "Wrote $wrote Warp secrets to BWS"
+  else
+    log_ok "Warp secrets already provisioned in BWS"
+  fi
+  return 0
 }
 
 # ── Step 4: Proton VPN config ──────────────────────────────────
@@ -508,7 +523,7 @@ setup_proton() {
   echo "  1. Log in to https://account.protonvpn.com/downloads"
   echo "  2. Download WireGuard configuration for your desired server"
   echo "  3. Extract the PrivateKey from the .conf file"
-  echo "  4. Add to BWS:  bws secret create \$PROJECT_ID --key PIRATE_WIREGUARD_PRIVATE_KEY --value '<key>'"
+  echo "  4. Add to BWS:  bws secret create PIRATE_WIREGUARD_PRIVATE_KEY '<key>' \$PROJECT_ID"
   echo ""
   echo "  Also required in BWS:"
   echo "    PIRATE_SHADOWSOCKS_PASSWORD  (auto-generated with --generate-secrets)"
@@ -545,6 +560,10 @@ setup_mariadb() {
     if [ -z "$db_pass" ] && [ -f "$BWS_TOKEN_FILE" ]; then
       db_pass=$(bws_run secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r --arg k "${BWS_SECRET_PREFIX}DATABASE_PASSWORD" '.[] | select(.key == $k) | .value' 2>/dev/null || true)
     fi
+    if [ -f "$BWS_TOKEN_FILE" ]; then
+      db_user=$(bws_run secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r --arg k "${BWS_SECRET_PREFIX}DATABASE_USERNAME" '.[] | select(.key == $k) | .value' 2>/dev/null || true)
+      db_user="${db_user:-${DATABASE_USERNAME:-grimmory}}"
+    fi
 
     local mysql_host="${MARIADB_HOST:-127.0.0.1}"
     local mysql_port="${MARIADB_PORT:-3306}"
@@ -558,16 +577,18 @@ setup_mariadb() {
     if mysql -h "$mysql_host" -P "$mysql_port" -u "$mysql_root_user" -e "SELECT 1" >/dev/null 2>&1; then
       log_ok "MariaDB connection successful (root, no password)"
 
-      if mysql -h "$mysql_host" -P "$mysql_port" -u "$mysql_root_user" -e "USE grimmory" >/dev/null 2>&1; then
-        log_ok "grimmory database already exists"
-      elif [ "$DRY_RUN" = true ]; then
+      if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would create grimmory database and user"
       else
         if [ -n "$db_pass" ]; then
+          local sql_db_user sql_db_pass
+          sql_db_user=$(printf '%s' "$db_user" | sed "s/'/''/g")
+          sql_db_pass=$(printf '%s' "$db_pass" | sed "s/'/''/g")
           mysql -h "$mysql_host" -P "$mysql_port" -u "$mysql_root_user" <<SQL
 CREATE DATABASE IF NOT EXISTS grimmory CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS '${db_user}'@'%' IDENTIFIED BY '${db_pass}';
-GRANT ALL PRIVILEGES ON grimmory.* TO '${db_user}'@'%';
+CREATE USER IF NOT EXISTS '${sql_db_user}'@'%';
+ALTER USER '${sql_db_user}'@'%' IDENTIFIED BY '${sql_db_pass}';
+GRANT ALL PRIVILEGES ON grimmory.* TO '${sql_db_user}'@'%';
 FLUSH PRIVILEGES;
 SQL
           log_ok "Created grimmory database and user"
@@ -589,12 +610,13 @@ SQL
 }
 
 print_mariadb_guide() {
+  local db_user="${DATABASE_USERNAME:-grimmory}"
   echo ""
   echo "  Manual MariaDB setup:"
   echo "    mysql -u root -p"
   echo "    CREATE DATABASE grimmory CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-  echo "    CREATE USER 'grimmory'@'%' IDENTIFIED BY '<password>';"
-  echo "    GRANT ALL PRIVILEGES ON grimmory.* TO 'grimmory'@'%';"
+  echo "    CREATE USER IF NOT EXISTS '${db_user}'@'%' IDENTIFIED BY '<password>';"
+  echo "    GRANT ALL PRIVILEGES ON grimmory.* TO '${db_user}'@'%';"
   echo "    FLUSH PRIVILEGES;"
   echo ""
   echo "  Add credentials to BWS:"
@@ -617,8 +639,20 @@ create_env() {
       log_info "[DRY RUN] Would copy .env.template to .env"
     else
       cp .env.template .env
+      local project_name="${COMPOSE_PROJECT_NAME:-pirate}"
+      local puid="${PUID:-$(id -u)}"
+      local pgid="${PGID:-$(id -g)}"
+      local timezone="${TZ:-UTC}"
+      [[ "$project_name" == '${COMPOSE_PROJECT_NAME}' ]] && project_name=pirate
+      [[ "$puid" == '${PUID}' ]] && puid=$(id -u)
+      [[ "$pgid" == '${PGID}' ]] && pgid=$(id -g)
+      [[ "$timezone" == '${TZ}' ]] && timezone=UTC
+      sed -i -e "s/^COMPOSE_PROJECT_NAME=.*/COMPOSE_PROJECT_NAME=$project_name/" \
+        -e "s/^PUID=.*/PUID=$puid/" \
+        -e "s/^PGID=.*/PGID=$pgid/" \
+        -e "s/^TZ=.*/TZ=$timezone/" .env
       log_ok "Created .env from .env.template"
-      log_warn "Edit .env and fill in non-secret values (PUID, PGID, TZ, COMPOSE_PROJECT_NAME)"
+      log_info "Initialized .env defaults for PUID, PGID, TZ, and COMPOSE_PROJECT_NAME"
     fi
   else
     log_warn ".env.template not found, creating minimal .env"
@@ -764,11 +798,8 @@ check_endpoint() {
   fi
 }
 
-# ── Step 10: Captain-required next steps ───────────────────────
-print_next_steps() {
-  log_step 10 "Captain-required next steps"
-
-  echo ""
+# ── Credential handoff ─────────────────────────────────────────
+print_credential_handoff() {
   if [ ${#MISSING_CAPTAIN[@]} -gt 0 ]; then
     echo -e "${YELLOW}The following secrets still need manual provisioning in BWS:${NC}"
     echo ""
@@ -798,7 +829,7 @@ print_next_steps() {
     done
     echo ""
     echo "  Add each with:"
-    echo "    bws secret create \$PROJECT_ID --key PIRATE_<VAR> --value '<value>'"
+    echo "    bws secret create PIRATE_<VAR> '<value>' \$PROJECT_ID"
     echo ""
   fi
 
@@ -810,6 +841,11 @@ print_next_steps() {
     done
     echo ""
   fi
+}
+
+# ── Step 10: Captain-required next steps ───────────────────────
+print_next_steps() {
+  log_step 10 "Captain-required next steps"
 
   echo "Post-deploy actions:"
   echo "  - Access services via godoxy reverse proxy"
@@ -842,6 +878,7 @@ main() {
   create_dirs_and_volumes
   create_env
   setup_bws
+  print_credential_handoff
   setup_warp
   setup_proton
   setup_mariadb
