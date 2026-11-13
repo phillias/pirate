@@ -208,10 +208,9 @@ manual checklist with a guided, optionally automated flow:
 - **MariaDB**: attempts auto-create of the `grimmory` database and
   user if `mysql` client is available and root has no password; falls
   back to printed SQL commands.
-- **`GDRIVE_PHILLIAS_PATH`**: compose.yaml now reads this from env
-  (default `/home/ubuntu/docker/flexget/gdrive-phillias`) instead of
-  a hardcoded absolute path, satisfying the parity rule for
-  non-phillias hosts that lack the rclone mount.
+- **`GDRIVE_PHILLIAS_PATH`**: compose.yaml now reads this from env,
+  defaulting to `/home/ubuntu/docker/flexget/gdrive-phillias` while allowing
+  hosts with a different rclone mount path to override it.
 
 Run `./greenfield.sh --help` for all options.
 
