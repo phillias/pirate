@@ -33,7 +33,7 @@ gen_password() { openssl rand -base64 24 | tr -d '=/+' | head -c 32; }
 gen_password_hash() {
   local password="$1"
   if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$password"
+    python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64, maxmem=64 * 1024 * 1024); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$password"
   else
     log_error "Need python3 with Werkzeug for password hashing"
     return 1
