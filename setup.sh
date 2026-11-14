@@ -363,7 +363,7 @@ render_json "$SHELF_STAGE/plugins/security.json" 640 "SHELFMARK_ADMIN_USERNAME S
 render_json "$SHELF_STAGE/plugins/prowlarr_clients.json" 640 "QBITTORRENT_USERNAME QBITTORRENT_PASSWORD" '. + {QBITTORRENT_USERNAME: env.QBITTORRENT_USERNAME, QBITTORRENT_PASSWORD: env.QBITTORRENT_PASSWORD}'
 render_json decypharr/data/config.json 600 "TORBOX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY" '.debrids[0].api_key = env.TORBOX_API_KEY | .debrids[0].download_api_keys[0] = env.TORBOX_API_KEY | .arrs[0].token = env.JACKETT_API_KEY | .arrs[1].token = env.NZBHYDRA2_API_KEY | .arrs[2].token = env.PROWLARR_API_KEY'
 render_raw templates/prowlarr/config.xml prowlarr/config/config.xml 640 "PROWLARR_API_KEY"
-JACKETT_ADMIN_PASSWORD_HASH="$(printf '%s' "$JACKETT_ADMIN_PASSWORD" | sha512sum | cut -d' ' -f1)"
+JACKETT_ADMIN_PASSWORD_HASH="$(python3 -c 'import hashlib, sys; print(hashlib.sha512((sys.argv[1] + sys.argv[2]).encode("utf-16le")).hexdigest())' "$JACKETT_ADMIN_PASSWORD" "$JACKETT_API_KEY")"
 export JACKETT_ADMIN_PASSWORD_HASH
 render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD_HASH JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = env.JACKETT_API_KEY | .AdminPassword = env.JACKETT_ADMIN_PASSWORD_HASH | .InstanceId = env.JACKETT_INSTANCE_ID | .OmdbApiKey = env.JACKETT_OMDB_KEY'
 render_nzbhydra nzbhydra2/config/nzbhydra.yml

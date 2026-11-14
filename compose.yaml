@@ -320,7 +320,6 @@ services:
       driver: journald
     env_file:
     - path: ./ABR/secrets.env
-      required: false
     environment:
     - PUID=${PUID}
     - PGID=${PGID}

@@ -399,6 +399,13 @@ print_admin_setup_gaps() {
 print_secret_guide() {
   log_info "Secret provisioning guide:"
   echo ""
+  echo "  Before running greenfield.sh, manually remove these legacy BWS secrets if present:"
+  echo "    PIRATE_JACKETT_ADMIN_PASSWORD (when it contains the old hash)"
+  echo "    PIRATE_SHELFMARK_BUILTIN_PASSWORD_HASH"
+  echo "    PIRATE_SHELFMARK_BUILTIN_USERNAME"
+  echo "    PIRATE_NZBHYDRA2_PASSWORD"
+  echo "  Do not delete them from this script; remove them manually so the renamed plaintext credentials can be generated."
+  echo ""
   echo "  Auto-generatable secrets (run with --generate-secrets to auto-create):"
   while IFS= read -r line; do
     [ -z "$line" ] && continue
