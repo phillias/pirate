@@ -43,32 +43,36 @@ bws_run() {
 gen_hex() { openssl rand -hex "${1:-16}"; }
 gen_uuid() { uuidgen 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())"; }
 gen_password() { openssl rand -base64 24 | tr -d '=/+' | head -c 32; }
-gen_password_hash() {
-  local password="$1"
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64, maxmem=64 * 1024 * 1024); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$password"
-  else
-    log_error "Need python3 with Werkzeug for password hashing"
-    return 1
-  fi
-}
-
 AUTO_GENERATABLE_VARS="
 DATABASE_USERNAME:grimmory
 DATABASE_PASSWORD:
 SHADOWSOCKS_PASSWORD:
 HTTP_CONTROL_SERVER_AUTH:
 SHELFMARK_FLASK_SECRET:
-SHELFMARK_BUILTIN_USERNAME:admin
-SHELFMARK_BUILTIN_PASSWORD_HASH:
+SHELFMARK_ADMIN_USERNAME:admin
+SHELFMARK_ADMIN_PASSWORD:
 QBITTORRENT_USERNAME:admin
 QBITTORRENT_PASSWORD:
 JACKETT_API_KEY:
 NZBHYDRA2_API_KEY:
 PROWLARR_API_KEY:
+JACKETT_ADMIN_USERNAME:admin
 JACKETT_ADMIN_PASSWORD:
 JACKETT_INSTANCE_ID:
-NZBHYDRA2_PASSWORD:
+PROWLARR_ADMIN_USERNAME:admin
+PROWLARR_ADMIN_PASSWORD:
+NZBHYDRA2_ADMIN_USERNAME:admin
+NZBHYDRA2_ADMIN_PASSWORD:
+AUDIOBOOKREQUEST_ADMIN_USERNAME:admin
+AUDIOBOOKREQUEST_ADMIN_PASSWORD:
+AUDIOBOOKSHELF_ADMIN_USERNAME:admin
+AUDIOBOOKSHELF_ADMIN_PASSWORD:
+GRIMMORY_ADMIN_USERNAME:admin
+GRIMMORY_ADMIN_PASSWORD:
+OPENBOOKS_ADMIN_USERNAME:admin
+OPENBOOKS_ADMIN_PASSWORD:
+STORYTELLER_ADMIN_USERNAME:admin
+STORYTELLER_ADMIN_PASSWORD:
 STORYTELLER_SECRET_KEY:
 AIOS_SECRET_KEY:
 AIOS_ADDON_PASSWORD:
@@ -315,24 +319,23 @@ generate_and_provision_secrets() {
     local value=""
     case "$varname" in
       DATABASE_USERNAME) value="${default_val:-grimmory}" ;;
-      SHELFMARK_BUILTIN_USERNAME) value="${default_val:-admin}" ;;
+      SHELFMARK_ADMIN_USERNAME|JACKETT_ADMIN_USERNAME|PROWLARR_ADMIN_USERNAME|\
+      NZBHYDRA2_ADMIN_USERNAME|AUDIOBOOKREQUEST_ADMIN_USERNAME|\
+      AUDIOBOOKSHELF_ADMIN_USERNAME|GRIMMORY_ADMIN_USERNAME|\
+      OPENBOOKS_ADMIN_USERNAME|STORYTELLER_ADMIN_USERNAME) value="${default_val:-admin}" ;;
       QBITTORRENT_USERNAME) value="${default_val:-admin}" ;;
       DATABASE_PASSWORD|SHADOWSOCKS_PASSWORD|HTTP_CONTROL_SERVER_AUTH|\
       JACKETT_API_KEY|NZBHYDRA2_API_KEY|PROWLARR_API_KEY|\
-      JACKETT_ADMIN_PASSWORD|NZBHYDRA2_PASSWORD|\
       STORYTELLER_SECRET_KEY|AIOS_SECRET_KEY|AIOS_ADDON_PASSWORD|\
       RESTIC_PASSWORD)
         value=$(gen_hex 32) ;;
+      JACKETT_ADMIN_PASSWORD|PROWLARR_ADMIN_PASSWORD|NZBHYDRA2_ADMIN_PASSWORD|\
+      AUDIOBOOKREQUEST_ADMIN_PASSWORD|AUDIOBOOKSHELF_ADMIN_PASSWORD|\
+      GRIMMORY_ADMIN_PASSWORD|OPENBOOKS_ADMIN_PASSWORD|STORYTELLER_ADMIN_PASSWORD|\
+      SHELFMARK_ADMIN_PASSWORD|QBITTORRENT_PASSWORD)
+        value=$(gen_password) ;;
       SHELFMARK_FLASK_SECRET)
         value=$(openssl rand -base64 32) ;;
-      SHELFMARK_BUILTIN_PASSWORD_HASH)
-        local plain_pw
-        plain_pw=$(gen_password)
-        value=$(gen_password_hash "$plain_pw") || { log_error "Cannot hash password"; failed=$((failed + 1)); continue; }
-        GENERATED_SECRETS[SHELFMARK_BUILTIN_PASSWORD]="$plain_pw"
-        ;;
-      QBITTORRENT_PASSWORD)
-        value=$(gen_password) ;;
       JACKETT_INSTANCE_ID)
         value=$(gen_uuid) ;;
       *) value=$(gen_hex 16) ;;
@@ -382,6 +385,17 @@ generate_and_provision_secrets() {
   fi
 }
 
+print_admin_setup_gaps() {
+  echo "  Admin credentials needing manual setup after deployment:"
+  echo "    Prowlarr — create the first user in the UI using the vaulted PIRATE_PROWLARR_ADMIN_* values"
+  echo "    Audiobookshelf — create the first user in the UI using the vaulted PIRATE_AUDIOBOOKSHELF_ADMIN_* values"
+  echo "    Grimmory — create the database-backed admin user in the UI using the vaulted PIRATE_GRIMMORY_ADMIN_* values"
+  echo "    OpenBooks — has no password-authenticated admin account; the vaulted values are retained for the convention"
+  echo "    Storyteller — create the first admin user in the UI using the vaulted PIRATE_STORYTELLER_ADMIN_* values"
+  echo "    Jackett — the password is rendered into config; Jackett has no configurable admin username, so use admin"
+  echo ""
+}
+
 print_secret_guide() {
   log_info "Secret provisioning guide:"
   echo ""
@@ -403,6 +417,7 @@ print_secret_guide() {
     echo "    PIRATE_$varname"
   done
   echo ""
+  print_admin_setup_gaps
 
   if [ "$DRY_RUN" = true ]; then
     :
@@ -922,6 +937,7 @@ print_next_steps() {
   log_step 12 "Captain-required next steps"
 
   print_credential_handoff
+  print_admin_setup_gaps
 
   echo "Post-deploy actions:"
   echo "  - Access services via godoxy reverse proxy"

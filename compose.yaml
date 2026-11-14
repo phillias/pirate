@@ -318,6 +318,9 @@ services:
     - 127.0.0.1:8837:8000
     logging:
       driver: journald
+    env_file:
+    - path: ./ABR/secrets.env
+      required: false
     environment:
     - PUID=${PUID}
     - PGID=${PGID}

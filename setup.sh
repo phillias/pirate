@@ -23,8 +23,8 @@ BWS_ONLY_VARS=(
   WIREGUARD_PRIVATE_KEY
   HTTP_CONTROL_SERVER_AUTH
   SHELFMARK_FLASK_SECRET
-  SHELFMARK_BUILTIN_USERNAME
-  SHELFMARK_BUILTIN_PASSWORD_HASH
+  SHELFMARK_ADMIN_USERNAME
+  SHELFMARK_ADMIN_PASSWORD
   QBITTORRENT_USERNAME
   QBITTORRENT_PASSWORD
   TORBOX_API_KEY
@@ -34,10 +34,24 @@ BWS_ONLY_VARS=(
   JACKETT_API_KEY
   NZBHYDRA2_API_KEY
   PROWLARR_API_KEY
+  JACKETT_ADMIN_USERNAME
   JACKETT_ADMIN_PASSWORD
   JACKETT_INSTANCE_ID
   JACKETT_OMDB_KEY
-  NZBHYDRA2_PASSWORD
+  PROWLARR_ADMIN_USERNAME
+  PROWLARR_ADMIN_PASSWORD
+  NZBHYDRA2_ADMIN_USERNAME
+  NZBHYDRA2_ADMIN_PASSWORD
+  AUDIOBOOKREQUEST_ADMIN_USERNAME
+  AUDIOBOOKREQUEST_ADMIN_PASSWORD
+  AUDIOBOOKSHELF_ADMIN_USERNAME
+  AUDIOBOOKSHELF_ADMIN_PASSWORD
+  GRIMMORY_ADMIN_USERNAME
+  GRIMMORY_ADMIN_PASSWORD
+  OPENBOOKS_ADMIN_USERNAME
+  OPENBOOKS_ADMIN_PASSWORD
+  STORYTELLER_ADMIN_USERNAME
+  STORYTELLER_ADMIN_PASSWORD
   WARP_OWN_PUBLIC_KEY
   WARP_REGISTRATION_ID
   WARP_ACCOUNT_ID
@@ -244,15 +258,16 @@ render_flask_secret() {
 }
 
 render_nzbhydra() {
-  local target="$1" tmp escaped_password escaped_api_key escaped_torbox escaped_nzbnoob escaped_scene escaped_miatrix
+  local target="$1" tmp escaped_username escaped_password escaped_api_key escaped_torbox escaped_nzbnoob escaped_scene escaped_miatrix
   tmp="$(mktemp "${target}.tmp.XXXXXX")"
-  escaped_password="$(printf '%s' "$NZBHYDRA2_PASSWORD" | jq -Rs .)"
+  escaped_username="$(printf '%s' "$NZBHYDRA2_ADMIN_USERNAME" | jq -Rs .)"
+  escaped_password="$(printf '%s' "$NZBHYDRA2_ADMIN_PASSWORD" | jq -Rs .)"
   escaped_api_key="$(printf '%s' "$NZBHYDRA2_API_KEY" | jq -Rs .)"
   escaped_torbox="$(printf '%s' "$TORBOX_API_KEY" | jq -Rs .)"
   escaped_nzbnoob="$(printf '%s' "$NZBNOOB_API_KEY" | jq -Rs .)"
   escaped_scene="$(printf '%s' "$SCENENZBS_API_KEY" | jq -Rs .)"
   escaped_miatrix="$(printf '%s' "$MIATRIX_API_KEY" | jq -Rs .)"
-  NZBHYDRA2_PASSWORD="$escaped_password" NZBHYDRA2_API_KEY="$escaped_api_key" TORBOX_API_KEY="$escaped_torbox" NZBNOOB_API_KEY="$escaped_nzbnoob" SCENENZBS_API_KEY="$escaped_scene" MIATRIX_API_KEY="$escaped_miatrix" envsubst '${NZBHYDRA2_PASSWORD} ${NZBHYDRA2_API_KEY} ${TORBOX_API_KEY} ${NZBNOOB_API_KEY} ${SCENENZBS_API_KEY} ${MIATRIX_API_KEY}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
+  NZBHYDRA2_ADMIN_USERNAME="$escaped_username" NZBHYDRA2_ADMIN_PASSWORD="$escaped_password" NZBHYDRA2_API_KEY="$escaped_api_key" TORBOX_API_KEY="$escaped_torbox" NZBNOOB_API_KEY="$escaped_nzbnoob" SCENENZBS_API_KEY="$escaped_scene" MIATRIX_API_KEY="$escaped_miatrix" envsubst '${NZBHYDRA2_ADMIN_USERNAME} ${NZBHYDRA2_ADMIN_PASSWORD} ${NZBHYDRA2_API_KEY} ${TORBOX_API_KEY} ${NZBNOOB_API_KEY} ${SCENENZBS_API_KEY} ${MIATRIX_API_KEY}' < templates/nzbhydra2/nzbhydra.yml > "$tmp"
   mv "$tmp" "$target"
   chmod 640 "$target"
   echo "   → $target"
@@ -296,10 +311,10 @@ else
   SHELFMARK_VOLUME=""
 fi
 
-REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_BUILTIN_USERNAME SHELFMARK_BUILTIN_PASSWORD_HASH QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY MIATRIX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY NZBHYDRA2_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
+REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_ADMIN_USERNAME SHELFMARK_ADMIN_PASSWORD QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY MIATRIX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_USERNAME JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY PROWLARR_ADMIN_USERNAME PROWLARR_ADMIN_PASSWORD NZBHYDRA2_ADMIN_USERNAME NZBHYDRA2_ADMIN_PASSWORD AUDIOBOOKREQUEST_ADMIN_USERNAME AUDIOBOOKREQUEST_ADMIN_PASSWORD AUDIOBOOKSHELF_ADMIN_USERNAME AUDIOBOOKSHELF_ADMIN_PASSWORD GRIMMORY_ADMIN_USERNAME GRIMMORY_ADMIN_PASSWORD OPENBOOKS_ADMIN_USERNAME OPENBOOKS_ADMIN_PASSWORD STORYTELLER_ADMIN_USERNAME STORYTELLER_ADMIN_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
 MISSING_VARS="$(missing_vars "$REQUIRED_VARS")"
 retained_config_ready() {
-  [ -s .env ] && [ -s decypharr/data/config.json ] && [ -s prowlarr/config/config.xml ] && [ -s jackett/config/Jackett/ServerConfig.json ] && [ -s nzbhydra2/config/nzbhydra.yml ] && [ -s warp/conf.json ] && [ -s grimmory/secrets.env ] && [ -s storyteller/secrets.env ] && [ -s AIOS.env ] && [ -s .restic-env ] && docker run --rm -v "$SHELFMARK_VOLUME:/config:ro" alpine:latest sh -c 'test -s /config/.flask_secret && test -s /config/plugins/security.json && test -s /config/plugins/prowlarr_clients.json' >/dev/null
+  [ -s .env ] && [ -s decypharr/data/config.json ] && [ -s prowlarr/config/config.xml ] && [ -s jackett/config/Jackett/ServerConfig.json ] && [ -s nzbhydra2/config/nzbhydra.yml ] && [ -s warp/conf.json ] && [ -s ABR/secrets.env ] && [ -s grimmory/secrets.env ] && [ -s storyteller/secrets.env ] && [ -s AIOS.env ] && [ -s .restic-env ] && docker run --rm -v "$SHELFMARK_VOLUME:/config:ro" alpine:latest sh -c 'test -s /config/.flask_secret && test -s /config/plugins/security.json && test -s /config/plugins/prowlarr_clients.json' >/dev/null
 }
 
 if [ -n "$MISSING_VARS" ]; then
@@ -333,7 +348,7 @@ if [ -f .env.template ]; then
   )
 fi
 
-mkdir -p "$SHELF_STAGE/plugins" decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp
+mkdir -p "$SHELF_STAGE/plugins" decypharr/data prowlarr/config jackett/config/Jackett nzbhydra2/config grimmory storyteller warp ABR
 
 cp templates/decypharr/config.json decypharr/data/config.json.template
 cp templates/shelfmark-plugins/prowlarr_clients.json "$SHELF_STAGE/plugins/prowlarr_clients.json.template"
@@ -342,13 +357,18 @@ cp templates/jackett/Jackett/ServerConfig.json jackett/config/Jackett/ServerConf
 cp templates/warp/conf.json warp/conf.json.template
 
 render_flask_secret "$SHELF_STAGE/.flask_secret"
-render_json "$SHELF_STAGE/plugins/security.json" 640 "SHELFMARK_BUILTIN_USERNAME SHELFMARK_BUILTIN_PASSWORD_HASH" '. + {BUILTIN_USERNAME: env.SHELFMARK_BUILTIN_USERNAME, BUILTIN_PASSWORD_HASH: env.SHELFMARK_BUILTIN_PASSWORD_HASH}'
+SHELFMARK_ADMIN_PASSWORD_HASH="$(python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64, maxmem=64 * 1024 * 1024); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$SHELFMARK_ADMIN_PASSWORD")"
+export SHELFMARK_ADMIN_PASSWORD_HASH
+render_json "$SHELF_STAGE/plugins/security.json" 640 "SHELFMARK_ADMIN_USERNAME SHELFMARK_ADMIN_PASSWORD_HASH" '. + {BUILTIN_USERNAME: env.SHELFMARK_ADMIN_USERNAME, BUILTIN_PASSWORD_HASH: env.SHELFMARK_ADMIN_PASSWORD_HASH}'
 render_json "$SHELF_STAGE/plugins/prowlarr_clients.json" 640 "QBITTORRENT_USERNAME QBITTORRENT_PASSWORD" '. + {QBITTORRENT_USERNAME: env.QBITTORRENT_USERNAME, QBITTORRENT_PASSWORD: env.QBITTORRENT_PASSWORD}'
 render_json decypharr/data/config.json 600 "TORBOX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY" '.debrids[0].api_key = env.TORBOX_API_KEY | .debrids[0].download_api_keys[0] = env.TORBOX_API_KEY | .arrs[0].token = env.JACKETT_API_KEY | .arrs[1].token = env.NZBHYDRA2_API_KEY | .arrs[2].token = env.PROWLARR_API_KEY'
 render_raw templates/prowlarr/config.xml prowlarr/config/config.xml 640 "PROWLARR_API_KEY"
-render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = env.JACKETT_API_KEY | .AdminPassword = env.JACKETT_ADMIN_PASSWORD | .InstanceId = env.JACKETT_INSTANCE_ID | .OmdbApiKey = env.JACKETT_OMDB_KEY'
+JACKETT_ADMIN_PASSWORD_HASH="$(printf '%s' "$JACKETT_ADMIN_PASSWORD" | sha512sum | cut -d' ' -f1)"
+export JACKETT_ADMIN_PASSWORD_HASH
+render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD_HASH JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = env.JACKETT_API_KEY | .AdminPassword = env.JACKETT_ADMIN_PASSWORD_HASH | .InstanceId = env.JACKETT_INSTANCE_ID | .OmdbApiKey = env.JACKETT_OMDB_KEY'
 render_nzbhydra nzbhydra2/config/nzbhydra.yml
 render_json warp/conf.json 600 "WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE" '.own_public_key = env.WARP_OWN_PUBLIC_KEY | .registration_id = env.WARP_REGISTRATION_ID | .account.id = env.WARP_ACCOUNT_ID | .account.license = env.WARP_ACCOUNT_LICENSE'
+render_dotenv templates/audiobookrequest/secrets.env ABR/secrets.env 600 "AUDIOBOOKREQUEST_ADMIN_USERNAME AUDIOBOOKREQUEST_ADMIN_PASSWORD"
 render_shell templates/grimmory/secrets.env grimmory/secrets.env 600 "DATABASE_USERNAME DATABASE_PASSWORD"
 render_shell templates/storyteller/secrets.env storyteller/secrets.env 600 "STORYTELLER_SECRET_KEY"
 render_dotenv templates/aios/AIOS.env AIOS.env 600 "AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY PROWLARR_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY TORBOX_API_KEY"
@@ -363,7 +383,7 @@ check_file() {
   fi
 }
 
-for file in .env "$SHELF_STAGE/.flask_secret" "$SHELF_STAGE/plugins/security.json" "$SHELF_STAGE/plugins/prowlarr_clients.json" decypharr/data/config.json prowlarr/config/config.xml jackett/config/Jackett/ServerConfig.json nzbhydra2/config/nzbhydra.yml warp/conf.json grimmory/secrets.env storyteller/secrets.env AIOS.env .restic-env; do
+for file in .env "$SHELF_STAGE/.flask_secret" "$SHELF_STAGE/plugins/security.json" "$SHELF_STAGE/plugins/prowlarr_clients.json" decypharr/data/config.json prowlarr/config/config.xml jackett/config/Jackett/ServerConfig.json nzbhydra2/config/nzbhydra.yml warp/conf.json ABR/secrets.env grimmory/secrets.env storyteller/secrets.env AIOS.env .restic-env; do
   check_file "$file"
 done
 
