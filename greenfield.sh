@@ -23,6 +23,19 @@ log_warn()  { echo -e "${YELLOW}[!] $*${NC}"; }
 log_error() { echo -e "${RED}[-] $*${NC}"; }
 log_step()  { echo -e "\n${BOLD}=== Step $1: $2 ===${NC}"; }
 
+BWS_INSTALL_HINT="mise use -g bitwarden-secrets-manager@latest  (or: cargo install bws)"
+
+# Ask a y/N question; in non-interactive mode print it and answer no.
+confirm() {
+  local answer
+  if [ "$NON_INTERACTIVE" = true ]; then
+    log_info "[NON-INTERACTIVE] $1 — not prompting"
+    return 1
+  fi
+  read -rp "$1 [y/N] " answer
+  [[ "$answer" =~ ^[Yy]$ ]]
+}
+
 bws_run() {
   BWS_ACCESS_TOKEN="$(cat "$BWS_TOKEN_FILE")" bws "$@"
 }
@@ -88,8 +101,8 @@ Greenfield deployment for the Pirate media suite.
 
 Steps:
   1. Prerequisites check
-  2. Create directories and Docker volumes
-  3. BWS project setup and secret provisioning
+  2. Create directories
+  3. BWS secret provisioning
   4. Warp registration
   5. Proton VPN config
   6. MariaDB setup for grimmory
@@ -97,7 +110,7 @@ Steps:
   8. Run setup.sh to render all configs
   9. Start the stack
   10. Post-install health checks
-  11. Print captain-required next steps
+  11. Captain-required next steps
 
 Options:
   --skip-bws          Skip BWS secret provisioning
@@ -108,6 +121,9 @@ Options:
   --generate-secrets  Auto-generate secrets and write to BWS
   --profile <name>    Compose profile (default: all)
   --dry-run           Show what would be done
+  --non-interactive   Never prompt (CI/headless): print guidance, skip
+                      confirmations, leave Warp/Proton setup for later.
+                      Implied when stdin is not a terminal.
   -h, --help          Show this help
 
 Examples:
@@ -115,6 +131,7 @@ Examples:
   $(basename "$0") --generate-secrets        # Auto-generate what's possible
   $(basename "$0") --profile arrs            # Deploy only ARR stack
   $(basename "$0") --skip-bws --dry-run      # Preview without BWS
+  $(basename "$0") --generate-secrets --non-interactive  # Headless/CI
 EOF
 }
 
@@ -126,6 +143,7 @@ SKIP_HEALTHCHECK=false
 GENERATE_SECRETS=false
 PROFILE="all"
 DRY_RUN=false
+NON_INTERACTIVE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -137,18 +155,21 @@ while [[ $# -gt 0 ]]; do
     --generate-secrets) GENERATE_SECRETS=true ;;
     --profile) PROFILE="$2"; shift ;;
     --dry-run) DRY_RUN=true ;;
+    --non-interactive) NON_INTERACTIVE=true ;;
     -h|--help) usage; exit 0 ;;
     *) log_error "Unknown option: $1"; usage; exit 1 ;;
   esac
   shift
 done
 
+[ -t 0 ] || NON_INTERACTIVE=true
+
 declare -A GENERATED_SECRETS=()
 declare -A MISSING_CAPTAIN=()
 
-# ── Step 0: Prerequisites ─────────────────────────────────────
+# ── Step 1: Prerequisites ─────────────────────────────────────
 check_prereqs() {
-  log_step 0 "Prerequisites check"
+  log_step 1 "Prerequisites check"
   local missing=()
 
   command -v docker >/dev/null 2>&1 || missing+=("docker")
@@ -159,6 +180,16 @@ check_prereqs() {
 
   if [ ${#missing[@]} -gt 0 ]; then
     log_error "Missing prerequisites: ${missing[*]}"
+    return 1
+  fi
+
+  if command -v bws >/dev/null 2>&1; then
+    log_ok "bws CLI found"
+  elif [ "$SKIP_BWS" = true ]; then
+    log_warn "bws CLI not found (ignored: --skip-bws)"
+  else
+    log_error "bws CLI not found. Install: $BWS_INSTALL_HINT"
+    log_error "Or re-run with --skip-bws for a manual .env deployment."
     return 1
   fi
 
@@ -173,9 +204,11 @@ check_prereqs() {
   log_ok "Prerequisites check passed"
 }
 
-# ── Step 1: Create directories and volumes ─────────────────────
-create_dirs_and_volumes() {
-  log_step 1 "Create directories and Docker volumes"
+# ── Step 2: Create directories ─────────────────────────────────
+# The shelfmark-secrets volume is not created here: compose declares it with
+# an explicit name and setup.sh creates it under the same name when rendering.
+create_dirs() {
+  log_step 2 "Create directories"
 
   local dirs=(
     "decypharr/data"
@@ -210,28 +243,16 @@ create_dirs_and_volumes() {
       log_ok "Created: $dir"
     fi
   done
-
-  local project_name="${COMPOSE_PROJECT_NAME:-pirate}"
-  local volume_name="${project_name}_shelfmark-secrets"
-
-  if docker volume inspect "$volume_name" >/dev/null 2>&1; then
-    log_ok "Docker volume exists: $volume_name"
-  elif [ "$DRY_RUN" = true ]; then
-    log_info "[DRY RUN] Would create Docker volume: $volume_name"
-  else
-    docker volume create "$volume_name" >/dev/null
-    log_ok "Created Docker volume: $volume_name"
-  fi
 }
 
-# ── Step 2: BWS project setup and secret provisioning ──────────
+# ── Step 3: BWS secret provisioning ────────────────────────────
 setup_bws() {
+  log_step 3 "BWS secret provisioning"
+
   if [ "$SKIP_BWS" = true ]; then
-    log_warn "Skipping BWS setup (--skip-bws)"
+    log_warn "Skipping BWS setup (--skip-bws); fill secrets in .env (see .env.template)"
     return 0
   fi
-
-  log_step 2 "BWS project setup and secret provisioning"
 
   if [ ! -f "$BWS_TOKEN_FILE" ]; then
     log_error "BWS token not found at $BWS_TOKEN_FILE"
@@ -240,7 +261,7 @@ setup_bws() {
   fi
 
   if ! command -v bws >/dev/null 2>&1; then
-    log_error "bws CLI not found. Install: npm install -g @bitwarden/secrets"
+    log_error "bws CLI not found. Install: $BWS_INSTALL_HINT"
     return 1
   fi
 
@@ -382,22 +403,27 @@ print_secret_guide() {
   done
   echo ""
 
-  if [ "$DRY_RUN" != true ]; then
-    read -rp "Have you provisioned all required secrets in BWS? [y/N] " confirm
-    [[ "$confirm" =~ ^[Yy]$ ]] || { log_error "Provision secrets first, then re-run"; return 1; }
+  if [ "$DRY_RUN" = true ]; then
+    :
+  elif [ "$NON_INTERACTIVE" = true ]; then
+    log_warn "Not confirmed (--non-interactive); setup.sh will report any missing secrets"
+    return 0
+  elif ! confirm "Have you provisioned all required secrets in BWS?"; then
+    log_error "Provision secrets first, then re-run"
+    return 1
   fi
 
   log_ok "BWS setup confirmed"
 }
 
-# ── Step 3: Warp registration ──────────────────────────────────
+# ── Step 4: Warp registration ──────────────────────────────────
 setup_warp() {
+  log_step 4 "Cloudflare WARP registration"
+
   if [ "$SKIP_WARP" = true ]; then
     log_warn "Skipping Warp registration (--skip-warp)"
     return 0
   fi
-
-  log_step 3 "Cloudflare WARP registration"
 
   if [ -f "./warp/conf.json" ] && [ -s "./warp/conf.json" ]; then
     log_ok "Warp registration exists at ./warp/conf.json"
@@ -421,9 +447,13 @@ setup_warp() {
   echo "  The script will then extract and store the WARP_* secrets in BWS."
   echo ""
 
-  if [ "$DRY_RUN" != true ]; then
-    read -rp "Have you completed Warp registration? [y/N] " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+  if [ "$DRY_RUN" = true ]; then
+    :
+  elif [ "$NON_INTERACTIVE" = true ]; then
+    log_warn "Warp not registered (--non-interactive); run the command above later, then re-run"
+    return 0
+  else
+    if confirm "Have you completed Warp registration?"; then
       if [ -f "./warp/conf.json" ]; then
         log_ok "Warp conf.json found"
         if [ "$GENERATE_SECRETS" = true ] && [ -f "$BWS_TOKEN_FILE" ]; then
@@ -506,14 +536,14 @@ extract_warp_secrets() {
   return 0
 }
 
-# ── Step 4: Proton VPN config ──────────────────────────────────
+# ── Step 5: Proton VPN config ──────────────────────────────────
 setup_proton() {
+  log_step 5 "Proton VPN (gluetun) config"
+
   if [ "$SKIP_PROTON" = true ]; then
     log_warn "Skipping Proton VPN config (--skip-proton)"
     return 0
   fi
-
-  log_step 4 "Proton VPN (gluetun) config"
 
   log_warn "Proton VPN requires a WireGuard private key from your Proton account."
   echo ""
@@ -527,22 +557,27 @@ setup_proton() {
   echo "    PIRATE_HTTP_CONTROL_SERVER_AUTH  (auto-generated with --generate-secrets)"
   echo ""
 
-  if [ "$DRY_RUN" != true ]; then
-    read -rp "Have you added Proton VPN secrets to BWS? [y/N] " confirm
-    [[ "$confirm" =~ ^[Yy]$ ]] || { log_error "Add Proton VPN secrets first"; return 1; }
+  if [ "$DRY_RUN" = true ]; then
+    :
+  elif [ "$NON_INTERACTIVE" = true ]; then
+    log_warn "Proton secrets not confirmed (--non-interactive); add them later, then re-run"
+    return 0
+  elif ! confirm "Have you added Proton VPN secrets to BWS?"; then
+    log_error "Add Proton VPN secrets first"
+    return 1
   fi
 
   log_ok "Proton VPN setup confirmed"
 }
 
-# ── Step 5: MariaDB setup for grimmory ─────────────────────────
+# ── Step 6: MariaDB setup for grimmory ─────────────────────────
 setup_mariadb() {
+  log_step 6 "MariaDB setup for grimmory"
+
   if [ "$SKIP_MARIADB" = true ]; then
     log_warn "Skipping MariaDB setup (--skip-mariadb)"
     return 0
   fi
-
-  log_step 5 "MariaDB setup for grimmory"
 
   log_info "grimmory needs a MariaDB database at host.docker.internal:3306"
   log_info "This is a cross-stack dependency — MariaDB runs in the selfhost stack."
@@ -622,9 +657,11 @@ print_mariadb_guide() {
   echo ""
 }
 
-# ── Step 6: Create .env ────────────────────────────────────────
+# ── Step 7: Create .env ────────────────────────────────────────
+# Runs after the BWS step; setup.sh (step 8) fills the remaining
+# placeholders from the BWS overlay or from values edited into .env.
 create_env() {
-  log_step 6 "Create .env from template"
+  log_step 7 "Create .env from template"
 
   if [ -f ".env" ] && [ -s ".env" ]; then
     log_ok ".env already exists"
@@ -672,9 +709,9 @@ EOF
   fi
 }
 
-# ── Step 7: Run setup.sh ──────────────────────────────────────
+# ── Step 8: Run setup.sh ──────────────────────────────────────
 run_setup() {
-  log_step 7 "Run setup.sh to render all configs"
+  log_step 8 "Run setup.sh to render all configs"
 
   if [ "$DRY_RUN" = true ]; then
     log_info "[DRY RUN] Would run: ./setup.sh"
@@ -690,15 +727,19 @@ run_setup() {
     log_ok "setup.sh completed successfully"
   else
     log_error "setup.sh failed — check missing env vars above"
-    log_warn "This usually means some BWS secrets are missing."
-    log_warn "Add missing secrets to BWS, then re-run this script."
+    if [ "$SKIP_BWS" = true ]; then
+      log_warn "Fill the missing values in .env (see .env.template), then re-run this script."
+    else
+      log_warn "This usually means some BWS secrets are missing."
+      log_warn "Add missing secrets to BWS, then re-run this script."
+    fi
     return 1
   fi
 }
 
-# ── Step 8: Start stack ────────────────────────────────────────
+# ── Step 9: Start stack ────────────────────────────────────────
 start_stack() {
-  log_step 8 "Start Docker Compose stack (profile: $PROFILE)"
+  log_step 9 "Start Docker Compose stack (profile: $PROFILE)"
 
   if [ "$DRY_RUN" = true ]; then
     log_info "[DRY RUN] Would run: docker compose --profile $PROFILE up -d"
@@ -713,14 +754,19 @@ start_stack() {
   fi
 }
 
-# ── Step 9: Health checks ──────────────────────────────────────
+# Services enabled by a compose profile, read from compose.yaml itself.
+profile_services() {
+  docker compose --profile "$1" config --services 2>/dev/null | sort
+}
+
+# ── Step 10: Health checks ─────────────────────────────────────
 run_healthchecks() {
+  log_step 10 "Post-install health checks"
+
   if [ "$SKIP_HEALTHCHECK" = true ]; then
     log_warn "Skipping health checks (--skip-healthcheck)"
     return 0
   fi
-
-  log_step 9 "Post-install health checks"
 
   if [ "$DRY_RUN" = true ]; then
     log_info "[DRY RUN] Would run health checks"
@@ -733,19 +779,16 @@ run_healthchecks() {
   local failed=0 total=0
 
   local services=()
-  case "$PROFILE" in
-    all)    services=(aios decypharr nzbhydra2 prowlarr jackett warp proton byparr warpbyparr protonbyparr abr abs grimmory openbooks storyteller shelfmark) ;;
-    stremio) services=(aios) ;;
-    arrs)   services=(nzbhydra2 prowlarr jackett) ;;
-    proxy)  services=(warp proton byparr warpbyparr protonbyparr) ;;
-    books)  services=(abr abs grimmory openbooks storyteller shelfmark) ;;
-    *)      services=() ;;
-  esac
+  mapfile -t services < <(profile_services "$PROFILE")
+  if [ ${#services[@]} -eq 0 ]; then
+    log_warn "No services found for profile '$PROFILE' in compose.yaml"
+  fi
 
   for svc in "${services[@]}"; do
     total=$((total + 1))
     local health status_line
-    status_line=$(docker compose ps --format json "$svc" 2>/dev/null | jq -r '.[0] // {}' 2>/dev/null || echo "{}")
+    # Compose prints one JSON object per line (older releases: one array).
+    status_line=$(docker compose ps --format json "$svc" 2>/dev/null | jq -sc 'flatten | .[0] // {}' 2>/dev/null || echo "{}")
     health=$(echo "$status_line" | jq -r '.Health // .Status // "unknown"' 2>/dev/null || echo "unknown")
     local state
     state=$(echo "$status_line" | jq -r '.State // "unknown"' 2>/dev/null || echo "unknown")
@@ -770,12 +813,18 @@ run_healthchecks() {
   echo ""
   log_info "Service endpoint checks..."
 
-  check_endpoint "Prowlarr" "http://localhost:9696/" &
-  check_endpoint "Jackett" "http://localhost:9117/" &
-  check_endpoint "NZBHydra2" "http://localhost:5076/" &
-  check_endpoint "Decypharr" "http://localhost:8282/" &
-  check_endpoint "AIOStreams" "http://localhost:3000/" &
-  check_endpoint "grimmory" "http://localhost:6760/actuator/health" &
+  local svc name url
+  while read -r svc name url; do
+    [[ " ${services[*]} " == *" $svc "* ]] || continue
+    check_endpoint "$name" "$url" &
+  done <<'ENDPOINTS'
+prowlarr Prowlarr http://localhost:9696/
+jackett Jackett http://localhost:9117/
+nzbhydra2 NZBHydra2 http://localhost:5076/
+decypharr Decypharr http://localhost:8282/
+aios AIOStreams http://localhost:3000/
+grimmory grimmory http://localhost:6760/actuator/health
+ENDPOINTS
   wait
 
   echo ""
@@ -840,9 +889,11 @@ print_credential_handoff() {
   fi
 }
 
-# ── Step 10: Captain-required next steps ───────────────────────
+# ── Step 11: Captain-required next steps ───────────────────────
 print_next_steps() {
-  log_step 10 "Captain-required next steps"
+  log_step 11 "Captain-required next steps"
+
+  print_credential_handoff
 
   echo "Post-deploy actions:"
   echo "  - Access services via godoxy reverse proxy"
@@ -871,14 +922,18 @@ main() {
     echo ""
   fi
 
+  if [ "$NON_INTERACTIVE" = true ]; then
+    log_info "Non-interactive mode — prompts are skipped"
+    echo ""
+  fi
+
   check_prereqs || exit 1
-  create_dirs_and_volumes
-  create_env
+  create_dirs
   setup_bws
-  print_credential_handoff
   setup_warp
   setup_proton
   setup_mariadb
+  create_env
   run_setup
   start_stack
   run_healthchecks
