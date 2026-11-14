@@ -109,8 +109,9 @@ Steps:
   7. Create .env from template
   8. Run setup.sh to render all configs
   9. Start the stack
-  10. Post-install health checks
-  11. Captain-required next steps
+  10. Create books-profile containers disabled (--profile all only)
+  11. Post-install health checks
+  12. Captain-required next steps
 
 Options:
   --skip-bws          Skip BWS secret provisioning
@@ -759,9 +760,36 @@ profile_services() {
   docker compose --profile "$1" config --services 2>/dev/null | sort
 }
 
-# ── Step 10: Health checks ─────────────────────────────────────
+# ── Step 10: Books profile, created but not started ───────────
+# Books-only services are not part of the all profile. On a full deploy,
+# create them without starting them. grimmory is in both profiles and is
+# already running; --no-recreate keeps that container instead of
+# recreating it stopped.
+create_books_disabled() {
+  log_step 10 "Create books profile containers (disabled)"
+
+  if [ "$PROFILE" != "all" ]; then
+    log_info "Skipping — books containers are created only for --profile all"
+    return 0
+  fi
+
+  local cmd=(docker compose --profile books up --no-start --no-recreate)
+  if [ "$DRY_RUN" = true ]; then
+    log_info "[DRY RUN] Would run: ${cmd[*]}"
+    return 0
+  fi
+
+  if "${cmd[@]}"; then
+    log_ok "Books containers created but not started (abr, abs, openbooks, storyteller, shelfmark)"
+  else
+    log_error "Failed to create books profile containers"
+    return 1
+  fi
+}
+
+# ── Step 11: Health checks ─────────────────────────────────────
 run_healthchecks() {
-  log_step 10 "Post-install health checks"
+  log_step 11 "Post-install health checks"
 
   if [ "$SKIP_HEALTHCHECK" = true ]; then
     log_warn "Skipping health checks (--skip-healthcheck)"
@@ -889,9 +917,9 @@ print_credential_handoff() {
   fi
 }
 
-# ── Step 11: Captain-required next steps ───────────────────────
+# ── Step 12: Captain-required next steps ───────────────────────
 print_next_steps() {
-  log_step 11 "Captain-required next steps"
+  log_step 12 "Captain-required next steps"
 
   print_credential_handoff
 
@@ -901,6 +929,10 @@ print_next_steps() {
   echo "  - Run backups: ./restic-backup.sh"
   echo "  - Restore: ./restore.sh -a <app> -t <time>"
   echo "  - Re-render configs after BWS updates: ./setup.sh"
+  if [ "$PROFILE" = "all" ]; then
+    echo "  - Books services are deployed but disabled: abr, abs, openbooks, storyteller, shelfmark"
+    echo "    Start them: docker compose --profile books up -d"
+  fi
   echo ""
 }
 
@@ -936,6 +968,7 @@ main() {
   create_env
   run_setup
   start_stack
+  create_books_disabled
   run_healthchecks
   print_next_steps
 
