@@ -16,8 +16,8 @@ auth:
     maySeeDetailsDl: true
     maySeeStats: true
     showIndexerSelection: true
-    username: "{OBF}VmnHZKHOmv66l/bHaAfltQ=="
-    password: ${NZBHYDRA2_PASSWORD}
+    username: ${NZBHYDRA2_ADMIN_USERNAME}
+    password: ${NZBHYDRA2_ADMIN_PASSWORD}
 categoriesConfig:
   enableCategorySizes: true
   categories:

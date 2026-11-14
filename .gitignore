@@ -51,6 +51,8 @@ proton/servers.json
 .restic-env
 
 # --- Cutover hardening (2026-10-03): runtime state + rendered secrets ---
+# audiobookrequest: rendered first-run admin credentials
+/ABR/secrets.env
 # proton: gluetun rendered secrets (interpolated from .env at cutover)
 proton/HTTP_CONTROL_SERVER_AUTH
 proton/SHADOWSOCKS_PASSWORD
