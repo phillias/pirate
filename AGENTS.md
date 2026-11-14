@@ -196,8 +196,9 @@ state.
 `greenfield.sh` is the fresh-install entry point. It replaces the old
 manual checklist with a guided, optionally automated flow:
 
-- **`--generate-secrets`**: auto-generates API keys, passwords, hashes,
-  and writes them to BWS. About half the secrets are auto-generatable;
+- **`--generate-secrets`**: auto-generates API keys and plaintext credentials,
+  then writes them to BWS; setup renders service-specific hashes where needed.
+  About half the secrets are auto-generatable;
   the rest require external account values (Proton WireGuard key,
   Torbox API key, TMDB/TVDB keys, indexer keys, restic/AWS backup
   creds). After auto-generation, the script prints a captain-required
