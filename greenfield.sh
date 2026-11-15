@@ -6,43 +6,8 @@ shopt -s extglob
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-BWS_PROJECT_ID="${BWS_PROJECT_ID:-fe9eea09-9eaf-45e6-a72f-b45e0150b29d}"
-BWS_TOKEN_FILE="${BWS_TOKEN_FILE:-$HOME/.agents/keys/default/.bws-token}"
-BWS_SECRET_PREFIX="PIRATE_"
+source "$SCRIPT_DIR/lib/pirate-common.sh"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-log_info()  { echo -e "${BLUE}[*] $*${NC}"; }
-log_ok()    { echo -e "${GREEN}[+] $*${NC}"; }
-log_warn()  { echo -e "${YELLOW}[!] $*${NC}"; }
-log_error() { echo -e "${RED}[-] $*${NC}"; }
-log_step()  { echo -e "\n${BOLD}=== Step $1: $2 ===${NC}"; }
-
-BWS_INSTALL_HINT="mise use -g bitwarden-secrets-manager@latest  (or: cargo install bws)"
-
-# Ask a y/N question; in non-interactive mode print it and answer no.
-confirm() {
-  local answer
-  if [ "$NON_INTERACTIVE" = true ]; then
-    log_info "[NON-INTERACTIVE] $1 — not prompting"
-    return 1
-  fi
-  read -rp "$1 [y/N] " answer
-  [[ "$answer" =~ ^[Yy]$ ]]
-}
-
-bws_run() {
-  BWS_ACCESS_TOKEN="$(cat "$BWS_TOKEN_FILE")" bws "$@"
-}
-
-gen_hex() { openssl rand -hex "${1:-16}"; }
-gen_uuid() { uuidgen 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())"; }
-gen_password() { openssl rand -base64 24 | tr -d '=/+' | head -c 32; }
 AUTO_GENERATABLE_VARS="
 DATABASE_USERNAME:grimmory
 DATABASE_PASSWORD:
@@ -69,8 +34,6 @@ AUDIOBOOKSHELF_ADMIN_USERNAME:admin
 AUDIOBOOKSHELF_ADMIN_PASSWORD:
 GRIMMORY_ADMIN_USERNAME:admin
 GRIMMORY_ADMIN_PASSWORD:
-OPENBOOKS_ADMIN_USERNAME:admin
-OPENBOOKS_ADMIN_PASSWORD:
 STORYTELLER_ADMIN_USERNAME:admin
 STORYTELLER_ADMIN_PASSWORD:
 STORYTELLER_SECRET_KEY:
@@ -80,6 +43,8 @@ RESTIC_PASSWORD:
 "
 
 CAPTAIN_REQUIRED_VARS="
+CAPTAIN_EMAIL
+CAPTAIN_NAME
 WIREGUARD_PRIVATE_KEY
 TORBOX_API_KEY
 NZBNOOB_API_KEY
@@ -115,7 +80,8 @@ Steps:
   9. Start the stack
   10. Create books-profile containers disabled (--profile all only)
   11. Post-install health checks
-  12. Captain-required next steps
+  12. Provision admin users in DB-backed services
+  13. Captain-required next steps
 
 Options:
   --skip-bws          Skip BWS secret provisioning
@@ -124,6 +90,7 @@ Options:
   --skip-mariadb      Skip MariaDB setup
   --skip-healthcheck  Skip post-install health checks
   --generate-secrets  Auto-generate secrets and write to BWS
+  --force-setup       Force re-run of setup.sh even if configs already rendered
   --profile <name>    Compose profile (default: all)
   --dry-run           Show what would be done
   --non-interactive   Never prompt (CI/headless): print guidance, skip
@@ -146,6 +113,7 @@ SKIP_PROTON=false
 SKIP_MARIADB=false
 SKIP_HEALTHCHECK=false
 GENERATE_SECRETS=false
+FORCE_SETUP=false
 PROFILE="all"
 DRY_RUN=false
 NON_INTERACTIVE=false
@@ -158,6 +126,7 @@ while [[ $# -gt 0 ]]; do
     --skip-mariadb) SKIP_MARIADB=true ;;
     --skip-healthcheck) SKIP_HEALTHCHECK=true ;;
     --generate-secrets) GENERATE_SECRETS=true ;;
+    --force-setup) FORCE_SETUP=true ;;
     --profile) PROFILE="$2"; shift ;;
     --dry-run) DRY_RUN=true ;;
     --non-interactive) NON_INTERACTIVE=true ;;
@@ -386,13 +355,18 @@ generate_and_provision_secrets() {
 }
 
 print_admin_setup_gaps() {
-  echo "  Admin credentials needing manual setup after deployment:"
-  echo "    Prowlarr — create the first user in the UI using the vaulted PIRATE_PROWLARR_ADMIN_* values"
-  echo "    Audiobookshelf — create the first user in the UI using the vaulted PIRATE_AUDIOBOOKSHELF_ADMIN_* values"
-  echo "    Grimmory — create the database-backed admin user in the UI using the vaulted PIRATE_GRIMMORY_ADMIN_* values"
-  echo "    OpenBooks — has no password-authenticated admin account; the vaulted values are retained for the convention"
-  echo "    Storyteller — create the first admin user in the UI using the vaulted PIRATE_STORYTELLER_ADMIN_* values"
-  echo "    Jackett — the password is rendered into config; Jackett has no configurable admin username, so use admin"
+  echo "  Admin credentials auto-provisioned by scripts/provision-admins.sh (Step 12):"
+  echo "    Audiobookshelf — POST /init creates root user from PIRATE_AUDIOBOOKSHELF_ADMIN_*"
+  echo "    Grimmory — POST /api/v1/setup creates admin from PIRATE_GRIMMORY_ADMIN_* and PIRATE_CAPTAIN_*"
+  echo "    Storyteller — direct SQLite insert with argon2id hash from PIRATE_STORYTELLER_ADMIN_* and PIRATE_CAPTAIN_*"
+  echo "    Prowlarr — POST /api/v1/config/host seeds first user from PIRATE_PROWLARR_ADMIN_*"
+  echo "  Config-rendered admin credentials (no post-startup action needed):"
+  echo "    Jackett — password rendered into ServerConfig.json; no configurable username"
+  echo "    NZBHydra2 — username/password rendered into nzbhydra.yml"
+  echo "    Shelfmark — username + scrypt hash rendered into security.json"
+  echo "    AudiobookRequest — env vars (ABR_APP__INIT_ROOT_*) seed root on first launch"
+  echo "  No authentication:"
+  echo "    OpenBooks — behind tinyauth forward auth; no own admin account"
   echo ""
 }
 
@@ -733,8 +707,31 @@ EOF
 }
 
 # ── Step 8: Run setup.sh ──────────────────────────────────────
+# Marker file (.setup-marker) stores a hash of the current BWS PIRATE_* secret
+# keys. If the marker exists and the hash matches, setup.sh is skipped — the
+# rendered configs are already up-to-date with the vaulted secrets. Use
+# --force-setup to override.
+compute_marker_hash() {
+  if [ -f "$BWS_TOKEN_FILE" ] && command -v bws >/dev/null 2>&1; then
+    bws_run secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r '[.[] | select(.key | startswith("PIRATE_")) | "\(.key)=\(.value)"] | sort | @sha256' 2>/dev/null || echo "no-bws"
+  else
+    echo "no-bws"
+  fi
+}
+
 run_setup() {
   log_step 8 "Run setup.sh to render all configs"
+
+  if [ "$FORCE_SETUP" != true ] && [ -f ".setup-marker" ]; then
+    local current_hash stored_hash
+    current_hash="$(compute_marker_hash)"
+    stored_hash="$(cat .setup-marker 2>/dev/null || echo "")"
+    if [ "$current_hash" = "$stored_hash" ] && [ -n "$stored_hash" ]; then
+      log_ok "Configs already rendered (marker matches). Use --force-setup to re-run."
+      return 0
+    fi
+    log_info "BWS secrets changed since last setup — re-rendering configs"
+  fi
 
   if [ "$DRY_RUN" = true ]; then
     log_info "[DRY RUN] Would run: ./setup.sh"
@@ -748,6 +745,7 @@ run_setup() {
 
   if ./setup.sh; then
     log_ok "setup.sh completed successfully"
+    compute_marker_hash > .setup-marker
   else
     log_error "setup.sh failed — check missing env vars above"
     if [ "$SKIP_BWS" = true ]; then
@@ -894,6 +892,32 @@ check_endpoint() {
   fi
 }
 
+# ── Step 12: Provision admin users ──────────────────────────────
+# After the stack is healthy, seed admin users into services that manage
+# auth in their own databases (ABS, Grimmory, Storyteller, Prowlarr).
+# ABR uses env vars and Jackett/NZBHydra2/Shelfmark use rendered configs —
+# those need no post-startup action. OpenBooks has no auth (behind tinyauth).
+provision_admins() {
+  log_step 12 "Provision admin users in DB-backed services"
+
+  if [ "$DRY_RUN" = true ]; then
+    log_info "[DRY RUN] Would run: ./scripts/provision-admins.sh"
+    return 0
+  fi
+
+  if [ ! -f "./scripts/provision-admins.sh" ]; then
+    log_warn "scripts/provision-admins.sh not found — skipping admin provisioning"
+    return 0
+  fi
+
+  if ./scripts/provision-admins.sh; then
+    log_ok "Admin user provisioning complete"
+  else
+    log_warn "Some admin provisioning steps failed — check output above"
+    log_warn "You can re-run: ./scripts/provision-admins.sh"
+  fi
+}
+
 # ── Credential handoff ─────────────────────────────────────────
 print_credential_handoff() {
   if [ ${#MISSING_CAPTAIN[@]} -gt 0 ]; then
@@ -939,9 +963,9 @@ print_credential_handoff() {
   fi
 }
 
-# ── Step 12: Captain-required next steps ───────────────────────
+# ── Step 13: Captain-required next steps ───────────────────────
 print_next_steps() {
-  log_step 12 "Captain-required next steps"
+  log_step 13 "Captain-required next steps"
 
   print_credential_handoff
   print_admin_setup_gaps
@@ -993,6 +1017,7 @@ main() {
   start_stack
   create_books_disabled
   run_healthchecks
+  provision_admins
   print_next_steps
 
   echo "╔══════════════════════════════════════════════════════════════╗"

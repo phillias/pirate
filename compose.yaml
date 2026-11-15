@@ -413,12 +413,12 @@ services:
     profiles:
     - books
     labels:
+    - proxy.openbooks.port=80
     - proxy.openbooks.homepage.category=pirate
+    - "proxy.openbooks.middlewares.forward_auth=route: tinyauth\n    auth_endpoint: /api/auth/traefik"
     logging:
       driver: journald
     restart: unless-stopped
-    ports:
-    - 127.0.0.1:18080:80
     volumes:
     - ./bookdrop:/books:rshared
     command: --persist --name OpenBooks

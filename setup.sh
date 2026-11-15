@@ -5,11 +5,11 @@ shopt -s extglob
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
+
+source "$SCRIPT_DIR/lib/pirate-common.sh"
+
 SHELF_STAGE="shelfmark/.config-stage"
 trap 'rm -rf -- "$SHELF_STAGE" decypharr/data/config.json.template jackett/config/Jackett/ServerConfig.json.template warp/conf.json.template' EXIT
-BWS_PROJECT_ID="fe9eea09-9eaf-45e6-a72f-b45e0150b29d"
-BWS_TOKEN_FILE="${BWS_TOKEN_FILE:-$HOME/.agents/keys/default/.bws-token}"
-BWS_SECRET_PREFIX="PIRATE_"
 
 # Env vars sourced exclusively from the BWS vault overlay — they must never
 # appear as plaintext in .env.  bws_overlay() already overrides at render
@@ -48,8 +48,8 @@ BWS_ONLY_VARS=(
   AUDIOBOOKSHELF_ADMIN_PASSWORD
   GRIMMORY_ADMIN_USERNAME
   GRIMMORY_ADMIN_PASSWORD
-  OPENBOOKS_ADMIN_USERNAME
-  OPENBOOKS_ADMIN_PASSWORD
+  CAPTAIN_EMAIL
+  CAPTAIN_NAME
   STORYTELLER_ADMIN_USERNAME
   STORYTELLER_ADMIN_PASSWORD
   WARP_OWN_PUBLIC_KEY
@@ -273,6 +273,98 @@ render_nzbhydra() {
   echo "   → $target"
 }
 
+# ── Idempotency: render modes ──────────────────────────────────
+# init          — default; skip full-render of app-managed configs that exist
+# refresh-secrets — patch only secret fields in-place in existing app-managed configs
+# force         — unconditional full-render (original behavior)
+RENDER_MODE="init"
+for arg in "$@"; do
+  case "$arg" in
+    --refresh-secrets) RENDER_MODE="refresh-secrets" ;;
+    --force) RENDER_MODE="force" ;;
+  esac
+done
+
+should_render() {
+  local config="$1"
+  case "$RENDER_MODE" in
+    force) return 0 ;;
+    init)
+      if [ -f "$config" ] && [ -s "$config" ]; then
+        echo "   ⏭️  $config exists — skipping full render ($RENDER_MODE mode)"
+        return 1
+      fi
+      return 0
+      ;;
+    refresh-secrets)
+      if [ -f "$config" ] && [ -s "$config" ]; then
+        return 1
+      fi
+      return 0
+      ;;
+  esac
+  return 0
+}
+
+refresh_prowlarr_secrets() {
+  local target="prowlarr/config/config.xml"
+  [ -f "$target" ] || return 0
+  if [ -n "${PROWLARR_API_KEY:-}" ]; then
+    sed -i "s|<ApiKey>[^<]*</ApiKey>|<ApiKey>${PROWLARR_API_KEY}</ApiKey>|" "$target"
+    echo "   → $target (refreshed ApiKey)"
+  fi
+}
+
+refresh_jackett_secrets() {
+  local target="jackett/config/Jackett/ServerConfig.json"
+  [ -f "$target" ] || return 0
+  local changed=0
+  if [ -n "${JACKETT_API_KEY:-}" ] && command -v jq >/dev/null 2>&1; then
+    local tmp
+    tmp="$(mktemp "${target}.tmp.XXXXXX")"
+    JACKETT_ADMIN_PASSWORD_HASH="$(python3 -c 'import hashlib, sys; print(hashlib.sha512((sys.argv[1] + sys.argv[2]).encode("utf-16le")).hexdigest())' "$JACKETT_ADMIN_PASSWORD" "$JACKETT_API_KEY")"
+    jq --arg api "$JACKETT_API_KEY" --arg pw "$JACKETT_ADMIN_PASSWORD_HASH" --arg id "${JACKETT_INSTANCE_ID:-}" --arg omdb "${JACKETT_OMDB_KEY:-}" '.APIKey = $api | .AdminPassword = $pw | .InstanceId = $id | .OmdbApiKey = $omdb' "$target" > "$tmp" && mv "$tmp" "$target"
+    changed=1
+  fi
+  [ "$changed" -eq 1 ] && echo "   → $target (refreshed secrets)"
+}
+
+refresh_nzbhydra_secrets() {
+  local target="nzbhydra2/config/nzbhydra.yml"
+  [ -f "$target" ] || return 0
+  if [ -n "${NZBHYDRA2_ADMIN_USERNAME:-}" ] && command -v python3 >/dev/null 2>&1; then
+    python3 -c "
+import sys
+target, user, pw, key = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with open(target) as f: lines = f.readlines()
+section = None
+for i, line in enumerate(lines):
+    if line.startswith('auth:'): section = 'auth'
+    elif line.startswith('main:'): section = 'main'
+    elif line and not line[0].isspace() and not line.startswith('-'): section = None
+    if section == 'auth' and 'username:' in line:
+        lines[i] = '    username: ' + user + '\n'
+    elif section == 'auth' and 'password:' in line:
+        lines[i] = '    password: ' + pw + '\n'
+    elif section == 'main' and 'apiKey:' in line:
+        lines[i] = '  apiKey: ' + key + '\n'
+with open(target, 'w') as f: f.writelines(lines)
+" "$target" "$NZBHYDRA2_ADMIN_USERNAME" "$NZBHYDRA2_ADMIN_PASSWORD" "$NZBHYDRA2_API_KEY"
+    echo "   → $target (refreshed username/password/apiKey)"
+  fi
+}
+
+refresh_warp_secrets() {
+  local target="warp/conf.json"
+  [ -f "$target" ] || return 0
+  if command -v jq >/dev/null 2>&1; then
+    local tmp
+    tmp="$(mktemp "${target}.tmp.XXXXXX")"
+    jq --arg key "${WARP_OWN_PUBLIC_KEY:-}" --arg reg "${WARP_REGISTRATION_ID:-}" --arg aid "${WARP_ACCOUNT_ID:-}" --arg lic "${WARP_ACCOUNT_LICENSE:-}" '.own_public_key = $key | .registration_id = $reg | .account.id = $aid | .account.license = $lic' "$target" > "$tmp" && mv "$tmp" "$target"
+    echo "   → $target (refreshed secrets)"
+  fi
+}
+
 bws_overlay
 
 # ── BWS-only vars hygiene check ──────────────────────────────────────────────
@@ -311,7 +403,7 @@ else
   SHELFMARK_VOLUME=""
 fi
 
-REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_ADMIN_USERNAME SHELFMARK_ADMIN_PASSWORD QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY MIATRIX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_USERNAME JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY PROWLARR_ADMIN_USERNAME PROWLARR_ADMIN_PASSWORD NZBHYDRA2_ADMIN_USERNAME NZBHYDRA2_ADMIN_PASSWORD AUDIOBOOKREQUEST_ADMIN_USERNAME AUDIOBOOKREQUEST_ADMIN_PASSWORD AUDIOBOOKSHELF_ADMIN_USERNAME AUDIOBOOKSHELF_ADMIN_PASSWORD GRIMMORY_ADMIN_USERNAME GRIMMORY_ADMIN_PASSWORD OPENBOOKS_ADMIN_USERNAME OPENBOOKS_ADMIN_PASSWORD STORYTELLER_ADMIN_USERNAME STORYTELLER_ADMIN_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
+REQUIRED_VARS="PUID PGID TZ DATABASE_USERNAME DATABASE_PASSWORD SHADOWSOCKS_PASSWORD WIREGUARD_PRIVATE_KEY HTTP_CONTROL_SERVER_AUTH SHELFMARK_FLASK_SECRET SHELFMARK_ADMIN_USERNAME SHELFMARK_ADMIN_PASSWORD QBITTORRENT_USERNAME QBITTORRENT_PASSWORD TORBOX_API_KEY NZBNOOB_API_KEY SCENENZBS_API_KEY MIATRIX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY JACKETT_ADMIN_USERNAME JACKETT_ADMIN_PASSWORD JACKETT_INSTANCE_ID JACKETT_OMDB_KEY PROWLARR_ADMIN_USERNAME PROWLARR_ADMIN_PASSWORD NZBHYDRA2_ADMIN_USERNAME NZBHYDRA2_ADMIN_PASSWORD AUDIOBOOKREQUEST_ADMIN_USERNAME AUDIOBOOKREQUEST_ADMIN_PASSWORD AUDIOBOOKSHELF_ADMIN_USERNAME AUDIOBOOKSHELF_ADMIN_PASSWORD GRIMMORY_ADMIN_USERNAME GRIMMORY_ADMIN_PASSWORD CAPTAIN_EMAIL CAPTAIN_NAME STORYTELLER_ADMIN_USERNAME STORYTELLER_ADMIN_PASSWORD WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE STORYTELLER_SECRET_KEY AIOS_SECRET_KEY AIOS_ADDON_PASSWORD AIOS_GDRIVE_CLIENT_SECRET AIOS_TMDB_ACCESS_TOKEN AIOS_TMDB_API_KEY AIOS_TVDB_API_KEY RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY"
 MISSING_VARS="$(missing_vars "$REQUIRED_VARS")"
 retained_config_ready() {
   [ -s .env ] && [ -s decypharr/data/config.json ] && [ -s prowlarr/config/config.xml ] && [ -s jackett/config/Jackett/ServerConfig.json ] && [ -s nzbhydra2/config/nzbhydra.yml ] && [ -s warp/conf.json ] && [ -s ABR/secrets.env ] && [ -s grimmory/secrets.env ] && [ -s storyteller/secrets.env ] && [ -s AIOS.env ] && [ -s .restic-env ] && docker run --rm -v "$SHELFMARK_VOLUME:/config:ro" alpine:latest sh -c 'test -s /config/.flask_secret && test -s /config/plugins/security.json && test -s /config/plugins/prowlarr_clients.json' >/dev/null
@@ -357,17 +449,33 @@ cp templates/jackett/Jackett/ServerConfig.json jackett/config/Jackett/ServerConf
 cp templates/warp/conf.json warp/conf.json.template
 
 render_flask_secret "$SHELF_STAGE/.flask_secret"
-SHELFMARK_ADMIN_PASSWORD_HASH="$(python3 -c 'import hashlib, secrets, sys; salt=secrets.token_hex(8); digest=hashlib.scrypt(sys.argv[1].encode(), salt=salt.encode(), n=32768, r=8, p=1, dklen=64, maxmem=64 * 1024 * 1024); print(f"scrypt:32768:8:1${salt}${digest.hex()}")' "$SHELFMARK_ADMIN_PASSWORD")"
+SHELFMARK_ADMIN_PASSWORD_HASH="$(gen_password_hash "$SHELFMARK_ADMIN_PASSWORD")"
 export SHELFMARK_ADMIN_PASSWORD_HASH
 render_json "$SHELF_STAGE/plugins/security.json" 640 "SHELFMARK_ADMIN_USERNAME SHELFMARK_ADMIN_PASSWORD_HASH" '. + {BUILTIN_USERNAME: env.SHELFMARK_ADMIN_USERNAME, BUILTIN_PASSWORD_HASH: env.SHELFMARK_ADMIN_PASSWORD_HASH}'
 render_json "$SHELF_STAGE/plugins/prowlarr_clients.json" 640 "QBITTORRENT_USERNAME QBITTORRENT_PASSWORD" '. + {QBITTORRENT_USERNAME: env.QBITTORRENT_USERNAME, QBITTORRENT_PASSWORD: env.QBITTORRENT_PASSWORD}'
 render_json decypharr/data/config.json 600 "TORBOX_API_KEY JACKETT_API_KEY NZBHYDRA2_API_KEY PROWLARR_API_KEY" '.debrids[0].api_key = env.TORBOX_API_KEY | .debrids[0].download_api_keys[0] = env.TORBOX_API_KEY | .arrs[0].token = env.JACKETT_API_KEY | .arrs[1].token = env.NZBHYDRA2_API_KEY | .arrs[2].token = env.PROWLARR_API_KEY'
-render_raw templates/prowlarr/config.xml prowlarr/config/config.xml 640 "PROWLARR_API_KEY"
+if should_render prowlarr/config/config.xml; then
+  render_raw templates/prowlarr/config.xml prowlarr/config/config.xml 640 "PROWLARR_API_KEY"
+elif [ "$RENDER_MODE" = "refresh-secrets" ]; then
+  refresh_prowlarr_secrets
+fi
 JACKETT_ADMIN_PASSWORD_HASH="$(python3 -c 'import hashlib, sys; print(hashlib.sha512((sys.argv[1] + sys.argv[2]).encode("utf-16le")).hexdigest())' "$JACKETT_ADMIN_PASSWORD" "$JACKETT_API_KEY")"
 export JACKETT_ADMIN_PASSWORD_HASH
-render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD_HASH JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = env.JACKETT_API_KEY | .AdminPassword = env.JACKETT_ADMIN_PASSWORD_HASH | .InstanceId = env.JACKETT_INSTANCE_ID | .OmdbApiKey = env.JACKETT_OMDB_KEY'
-render_nzbhydra nzbhydra2/config/nzbhydra.yml
-render_json warp/conf.json 600 "WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE" '.own_public_key = env.WARP_OWN_PUBLIC_KEY | .registration_id = env.WARP_REGISTRATION_ID | .account.id = env.WARP_ACCOUNT_ID | .account.license = env.WARP_ACCOUNT_LICENSE'
+if should_render jackett/config/Jackett/ServerConfig.json; then
+  render_json jackett/config/Jackett/ServerConfig.json 640 "JACKETT_API_KEY JACKETT_ADMIN_PASSWORD_HASH JACKETT_INSTANCE_ID JACKETT_OMDB_KEY" '.APIKey = env.JACKETT_API_KEY | .AdminPassword = env.JACKETT_ADMIN_PASSWORD_HASH | .InstanceId = env.JACKETT_INSTANCE_ID | .OmdbApiKey = env.JACKETT_OMDB_KEY'
+elif [ "$RENDER_MODE" = "refresh-secrets" ]; then
+  refresh_jackett_secrets
+fi
+if should_render nzbhydra2/config/nzbhydra.yml; then
+  render_nzbhydra nzbhydra2/config/nzbhydra.yml
+elif [ "$RENDER_MODE" = "refresh-secrets" ]; then
+  refresh_nzbhydra_secrets
+fi
+if should_render warp/conf.json; then
+  render_json warp/conf.json 600 "WARP_OWN_PUBLIC_KEY WARP_REGISTRATION_ID WARP_ACCOUNT_ID WARP_ACCOUNT_LICENSE" '.own_public_key = env.WARP_OWN_PUBLIC_KEY | .registration_id = env.WARP_REGISTRATION_ID | .account.id = env.WARP_ACCOUNT_ID | .account.license = env.WARP_ACCOUNT_LICENSE'
+elif [ "$RENDER_MODE" = "refresh-secrets" ]; then
+  refresh_warp_secrets
+fi
 render_dotenv templates/audiobookrequest/secrets.env ABR/secrets.env 600 "AUDIOBOOKREQUEST_ADMIN_USERNAME AUDIOBOOKREQUEST_ADMIN_PASSWORD"
 render_shell templates/grimmory/secrets.env grimmory/secrets.env 600 "DATABASE_USERNAME DATABASE_PASSWORD"
 render_shell templates/storyteller/secrets.env storyteller/secrets.env 600 "STORYTELLER_SECRET_KEY"
@@ -391,4 +499,4 @@ if [ "$ERRORS" -gt 0 ]; then
   echo "❌ Setup failed with $ERRORS error(s)."
   exit 1
 fi
-echo "✅ Setup complete. Ready for: docker compose up -d"
+echo "✅ Setup complete ($RENDER_MODE). Ready for: docker compose up -d"

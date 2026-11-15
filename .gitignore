@@ -86,3 +86,5 @@ AIOS/data/instance-id
 restic-backup.log
 # phase-2 prep secret archives (tarballs of env/DB exports)
 .volume-exports/
+# setup marker: sha256 hash of BWS PIRATE_* secret keys, written after setup.sh
+.setup-marker
