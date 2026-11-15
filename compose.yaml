@@ -324,9 +324,6 @@ services:
     - PUID=${PUID}
     - PGID=${PGID}
     - TZ=${TZ}
-    - ABR_APP__INIT_ROOT_USERNAME=${AUDIOBOOKREQUEST_ADMIN_USERNAME}
-    - ABR_APP__INIT_ROOT_PASSWORD=${AUDIOBOOKREQUEST_ADMIN_PASSWORD}
-    - ABR_APP__FORCE_LOGIN_TYPE=forms
     volumes:
     - ./ABR/config:/config
     restart: unless-stopped
@@ -418,7 +415,7 @@ services:
     labels:
     - proxy.openbooks.port=80
     - proxy.openbooks.homepage.category=pirate
-    - proxy.openbooks.middlewares.forward_auth=route: tinyauth\n    auth_endpoint: /api/auth/traefik
+    - "proxy.openbooks.middlewares.forward_auth=route: tinyauth\n    auth_endpoint: /api/auth/traefik"
     logging:
       driver: journald
     restart: unless-stopped

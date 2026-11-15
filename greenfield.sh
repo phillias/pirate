@@ -713,7 +713,7 @@ EOF
 # --force-setup to override.
 compute_marker_hash() {
   if [ -f "$BWS_TOKEN_FILE" ] && command -v bws >/dev/null 2>&1; then
-    bws_run secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r '[.[].key | select(startswith("PIRATE_"))] | sort | @sha256' 2>/dev/null || echo "no-bws"
+    bws_run secret list "$BWS_PROJECT_ID" -o json 2>/dev/null | jq -r '[.[] | select(.key | startswith("PIRATE_")) | "\(.key)=\(.value)"] | sort | @sha256' 2>/dev/null || echo "no-bws"
   else
     echo "no-bws"
   fi

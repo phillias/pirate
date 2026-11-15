@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2016,SC2086
+# shellcheck disable=SC2016
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,13 +14,7 @@ echo "╚═══════════════════════�
 echo ""
 
 # ── Load secrets ───────────────────────────────────────────────
-if [ -f .env ]; then
-  set -a
-  # shellcheck source=/dev/null
-  source .env
-  set +a
-fi
-
+load_dotenv .env
 load_bws_secrets || log_warn "BWS secrets unavailable — using .env only"
 
 # ── Validate required vars ─────────────────────────────────────
@@ -40,10 +34,13 @@ failures=0
 provision_abs() {
   log_info "Provisioning Audiobookshelf admin user..."
   local abs_url="http://localhost:13377"
+  local json_body
+  json_body=$(jq -nc --arg user "$AUDIOBOOKSHELF_ADMIN_USERNAME" --arg pass "$AUDIOBOOKSHELF_ADMIN_PASSWORD" \
+    '{newRoot: {username: $user, password: $pass}}')
   local http_code
   http_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$abs_url/init" \
     -H "Content-Type: application/json" \
-    -d "{\"newRoot\":{\"username\":\"$AUDIOBOOKSHELF_ADMIN_USERNAME\",\"password\":\"$AUDIOBOOKSHELF_ADMIN_PASSWORD\"}}" 2>/dev/null || echo "000")
+    -d "$json_body" 2>/dev/null || echo "000")
   case "$http_code" in
     200) log_ok "Audiobookshelf: admin user created" ;;
     500) log_info "Audiobookshelf: admin user already exists (500)" ;;
@@ -74,10 +71,14 @@ provision_grimmory() {
     return
   fi
 
+  local json_body
+  json_body=$(jq -nc --arg user "$GRIMMORY_ADMIN_USERNAME" --arg email "$CAPTAIN_EMAIL" \
+    --arg name "$CAPTAIN_NAME" --arg pass "$GRIMMORY_ADMIN_PASSWORD" \
+    '{username: $user, email: $email, name: $name, password: $pass}')
   local http_code
   http_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$grimm_url/api/v1/setup" \
     -H "Content-Type: application/json" \
-    -d "{\"username\":\"$GRIMMORY_ADMIN_USERNAME\",\"email\":\"$CAPTAIN_EMAIL\",\"name\":\"$CAPTAIN_NAME\",\"password\":\"$GRIMMORY_ADMIN_PASSWORD\"}" 2>/dev/null || echo "000")
+    -d "$json_body" 2>/dev/null || echo "000")
   case "$http_code" in
     200) log_ok "Grimmory: admin user created" ;;
     400|409) log_info "Grimmory: setup already done ($http_code)" ;;
@@ -95,7 +96,7 @@ hash_argon2id() {
   if command -v argon2 >/dev/null 2>&1; then
     local salt
     salt="$(head -c 16 /dev/urandom | base64 -w0 | head -c 22)"
-    ARGON2_HASH="$(echo -n "$password" | argon2 "$salt" -id -m 16 -t 3 -p 4 -l 32 -e -v 13 2>/dev/null || true)"
+    ARGON2_HASH="$(printf '%s' "$password" | argon2 "$salt" -id -m 16 -t 3 -p 4 -l 32 -e -v 13 2>/dev/null || true)"
     if [ -n "$ARGON2_HASH" ]; then return 0; fi
   fi
 
@@ -103,7 +104,7 @@ hash_argon2id() {
   if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^storyteller$'; then
     local salt
     salt="$(head -c 16 /dev/urandom | base64 -w0 | head -c 22)"
-    ARGON2_HASH="$(echo -n "$password" | docker exec -i storyteller argon2 "$salt" -id -m 16 -t 3 -p 4 -l 32 -e -v 13 2>/dev/null || true)"
+    ARGON2_HASH="$(printf '%s' "$password" | docker exec -i storyteller argon2 "$salt" -id -m 16 -t 3 -p 4 -l 32 -e -v 13 2>/dev/null || true)"
     if [ -n "$ARGON2_HASH" ]; then return 0; fi
   fi
 
@@ -111,9 +112,10 @@ hash_argon2id() {
   if command -v python3 >/dev/null 2>&1; then
     ARGON2_HASH="$(python3 -c "
 from argon2 import PasswordHasher
+import sys
 ph = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4, hash_len=32, salt_len=16)
-print(ph.hash('$password'))
-" 2>/dev/null || true)"
+print(ph.hash(sys.argv[1]))
+" "$password" 2>/dev/null || true)"
     if [ -n "$ARGON2_HASH" ]; then return 0; fi
   fi
 
@@ -150,11 +152,20 @@ provision_storyteller() {
   perm_uuid="$(gen_uuid)"
   user_uuid="$(gen_uuid)"
 
+  # Escape single quotes for SQL (replace ' with '')
+  local esc_user esc_email esc_name esc_hash esc_perm_uuid esc_user_uuid
+  esc_user="${STORYTELLER_ADMIN_USERNAME//\'/\'\'}"
+  esc_email="${CAPTAIN_EMAIL//\'/\'\'}"
+  esc_name="${CAPTAIN_NAME//\'/\'\'}"
+  esc_hash="${ARGON2_HASH//\'/\'\'}"
+  esc_perm_uuid="${perm_uuid//\'/\'\'}"
+  esc_user_uuid="${user_uuid//\'/\'\'}"
+
   # Insert user_permission with all permissions
-  sqlite3 "$db_path" "INSERT INTO user_permission (uuid, id, book_create, book_read, book_process, book_download, book_list, user_create, user_list, user_read, user_delete, settings_update, book_delete, book_update, invite_list, invite_delete) SELECT '$perm_uuid', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 WHERE NOT EXISTS (SELECT 1 FROM user_permission);" 2>/dev/null
+  sqlite3 "$db_path" "INSERT INTO user_permission (uuid, id, book_create, book_read, book_process, book_download, book_list, user_create, user_list, user_read, user_delete, settings_update, book_delete, book_update, invite_list, invite_delete) SELECT '${esc_perm_uuid}', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 WHERE NOT EXISTS (SELECT 1 FROM user_permission);"
 
   # Insert user
-  sqlite3 "$db_path" "INSERT INTO user (uuid, id, user_permission_uuid, username, email, full_name, hashed_password) SELECT '$user_uuid', 1, '$perm_uuid', '$STORYTELLER_ADMIN_USERNAME', '$CAPTAIN_EMAIL', '$CAPTAIN_NAME', '$ARGON2_HASH' WHERE NOT EXISTS (SELECT 1 FROM user);" 2>/dev/null
+  sqlite3 "$db_path" "INSERT INTO user (uuid, id, user_permission_uuid, username, email, full_name, hashed_password) SELECT '${esc_user_uuid}', 1, '${esc_perm_uuid}', '${esc_user}', '${esc_email}', '${esc_name}', '${esc_hash}' WHERE NOT EXISTS (SELECT 1 FROM user);"
 
   # Verify
   user_count="$(sqlite3 "$db_path" "SELECT COUNT(*) FROM user;" 2>/dev/null || echo "0")"
@@ -166,7 +177,7 @@ provision_storyteller() {
   fi
 }
 
-# ── Prowlarr (POST /api/v1/config/host) ────────────────────────
+# ── Prowlarr (PUT /api/v1/config/host) ────────────────────────
 provision_prowlarr() {
   log_info "Provisioning Prowlarr admin user..."
   local prowl_url="http://localhost:9696"
@@ -200,9 +211,10 @@ provision_prowlarr() {
     return
   fi
 
-  # Add username and password, then POST back
+  # Add username and password via jq --arg, then PUT back
   local updated
-  updated=$(echo "$config" | jq --arg user "$PROWLARR_ADMIN_USERNAME" --arg pass "$PROWLARR_ADMIN_PASSWORD" '. + {username: $user, password: $pass}' 2>/dev/null) || {
+  updated=$(echo "$config" | jq --arg user "$PROWLARR_ADMIN_USERNAME" --arg pass "$PROWLARR_ADMIN_PASSWORD" \
+    '. + {username: $user, password: $pass}' 2>/dev/null) || {
     log_warn "Prowlarr: failed to update config with admin credentials"
     return
   }

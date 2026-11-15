@@ -69,10 +69,38 @@ load_bws_secrets() {
   fi
   # Parse each secret: key starts with PIRATE_, value is the secret value.
   # Strip the PIRATE_ prefix to get the env var name.
-  while IFS=$'\t' read -r key value; do
+  # Use null-separated output to preserve values with tabs/newlines.
+  while IFS= read -r -d '' key && IFS= read -r -d '' value; do
     [ -z "$key" ] && continue
     local varname="${key#PIRATE_}"
     export "$varname=$value"
-  done < <(echo "$secrets_json" | jq -r '.[] | select(.key | startswith("PIRATE_")) | "\(.key)\t\(.value)"' 2>/dev/null)
+  done < <(echo "$secrets_json" | jq -rj '.[] | select(.key | startswith("PIRATE_")) | .key, "\u0000", .value, "\u0000"' 2>/dev/null)
+  return 0
+}
+
+# ── Dotenv reader (Compose-safe) ───────────────────────────────
+# Reads a .env file in Compose dotenv format (handles $$ escaping).
+# Sets variables in the caller's environment. Used by provision-admins.sh
+# instead of `source .env` which breaks on $$ in compose format.
+load_dotenv() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  while IFS='=' read -r key value || [ -n "$key" ]; do
+    # Skip comments and empty lines
+    [[ "$key" =~ ^[[:space:]]*# ]] && continue
+    [ -z "$key" ] && continue
+    # Trim whitespace
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+    # Unquote value if wrapped in matching quotes
+    value="${value#\"}"
+    value="${value%\"}"
+    value="${value#\'}"
+    value="${value%\'}"
+    # Compose dotenv: $$ means literal $ — collapse $$ to $
+    value="${value//\$\$/\$}"
+    # Only export if key is a valid identifier
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && export "$key=$value"
+  done < "$file"
   return 0
 }

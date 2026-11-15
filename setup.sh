@@ -285,13 +285,6 @@ for arg in "$@"; do
   esac
 done
 
-APP_MANAGED_CONFIGS=(
-  "nzbhydra2/config/nzbhydra.yml"
-  "prowlarr/config/config.xml"
-  "jackett/config/Jackett/ServerConfig.json"
-  "warp/conf.json"
-)
-
 should_render() {
   local config="$1"
   case "$RENDER_MODE" in
@@ -341,13 +334,22 @@ refresh_nzbhydra_secrets() {
   [ -f "$target" ] || return 0
   if [ -n "${NZBHYDRA2_ADMIN_USERNAME:-}" ] && command -v python3 >/dev/null 2>&1; then
     python3 -c "
-import re, sys
-with open('$target', 'r') as f: content = f.read()
-content = re.sub(r'username: \S+', 'username: ${NZBHYDRA2_ADMIN_USERNAME}', content)
-content = re.sub(r'password: \S+', 'password: ${NZBHYDRA2_ADMIN_PASSWORD}', content)
-content = re.sub(r'apiKey: \S+', 'apiKey: ${NZBHYDRA2_API_KEY}', content, count=1)
-with open('$target', 'w') as f: f.write(content)
-"
+import sys
+target, user, pw, key = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with open(target) as f: lines = f.readlines()
+section = None
+for i, line in enumerate(lines):
+    if line.startswith('auth:'): section = 'auth'
+    elif line.startswith('main:'): section = 'main'
+    elif line and not line[0].isspace() and not line.startswith('-'): section = None
+    if section == 'auth' and 'username:' in line:
+        lines[i] = '    username: ' + user + '\n'
+    elif section == 'auth' and 'password:' in line:
+        lines[i] = '    password: ' + pw + '\n'
+    elif section == 'main' and 'apiKey:' in line:
+        lines[i] = '  apiKey: ' + key + '\n'
+with open(target, 'w') as f: f.writelines(lines)
+" "$target" "$NZBHYDRA2_ADMIN_USERNAME" "$NZBHYDRA2_ADMIN_PASSWORD" "$NZBHYDRA2_API_KEY"
     echo "   → $target (refreshed username/password/apiKey)"
   fi
 }
